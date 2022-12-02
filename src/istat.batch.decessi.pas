@@ -8,6 +8,8 @@ uses
   Classes, SysUtils, istat.batch, ZDbcIntfs, paxutils;
 
 type
+  PIstatDecessiRecord = ^TIstatDecessiRecord;
+
   TIstatDecessiRecord = record
     ITTER107: string;
     Territorio: string;
@@ -42,8 +44,8 @@ type
 
   { TDecessiProcessor }
 
-  TDecessiProcessor = class(TStringAbstractItemProcessor<TIstatDecessiRecord>)
-    function process(const aIntput: string): TIstatDecessiRecord; override;
+  TDecessiProcessor = class(TStringAbstractItemProcessor<PIstatDecessiRecord>)
+    function process(const aIntput: string): PIstatDecessiRecord; override;
   end;
 
   { TDecessiDatabaseIstatDecessiWriter }
@@ -58,6 +60,14 @@ type
   end;
 
 
+  { TChunkedDecessiDatabaseIstatDecessiWriter }
+
+  TChunkedDecessiDatabaseIstatDecessiWriter = class(TFirebirdChunkedDatabaseWriter<PIstatDecessiRecord>)
+  protected
+    function statement(item: PIstatDecessiRecord): rawbytestring; override;
+    function getTableName: string;
+  end;
+
   { TDecessiRunner }
 
   TDecessiRunner = class(TInterfacedObject, IRunnable)
@@ -70,13 +80,26 @@ type
     procedure SetFileName(AValue: string);
   protected
     function getReaderDecessi: IStringReader;
-    function getWriterDecessi: IItemWriter<TIstatDecessiRecord>;
+    function getWriterDecessi: IChunkItemWriter<PIstatDecessiRecord>;
   public
     constructor Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
     procedure run;
   end;
 
 implementation
+
+{ TChunkedDecessiDatabaseIstatDecessiWriter }
+
+function TChunkedDecessiDatabaseIstatDecessiWriter.statement(item: PIstatDecessiRecord): rawbytestring;
+begin
+  with item^ do
+    Result := Format('INSERT INTO ISTAT_DECESSI VALUES(%s,%s,%s,%s,%s, %s,%s,%s,%s,%s, %s,%s,%s,%s,%s, %s,%s,%s,%s,%s, %s,%s,%s,%s,%s ,%s,%s,%s,%s);', [QuotedStr(ITTER107), QuotedStr(Territorio), QuotedStr(TIPO_DATO15), QuotedStr(Tipo_dato), QuotedStr(ETA1_A), QuotedStr(Eta), QuotedStr(SEXISTAT1), QuotedStr(Sesso), QuotedStr(STATCIV2), QuotedStr(Stato_civile), QuotedStr(TITOLO_STUDIO), QuotedStr(Istruzione), QuotedStr(T_BIS_A), QuotedStr(Mese_di_decesso), QuotedStr(T_BIS_B), QuotedStr(Anno_di_nascita), QuotedStr(ETA1_B), QuotedStr(Classe_di_eta_coniuge_superstite), QuotedStr(T_BIS_C), QuotedStr(Anno_di_matrimonio), QuotedStr(ISO), QuotedStr(Paese_di_cittadinanza), QuotedStr(CAUSEMORTE_SL), QuotedStr(Causa_iniziale_di_morte), QuotedStr(TIME), QuotedStr(Seleziona_periodo), QuotedStr(Value), QuotedStr(Flag_Codes), QuotedStr(Flags)]);
+end;
+
+function TChunkedDecessiDatabaseIstatDecessiWriter.getTableName: string;
+begin
+  Result := 'ISTAT_DECESSI';
+end;
 
 { TDecessiRunner }
 
@@ -102,11 +125,11 @@ begin
   Result := reader;
 end;
 
-function TDecessiRunner.getWriterDecessi: IItemWriter<TIstatDecessiRecord>;
+function TDecessiRunner.getWriterDecessi: IChunkItemWriter<PIstatDecessiRecord>;
 var
-  writer: TDecessiDatabaseIstatDecessiWriter;
+  writer: TChunkedDecessiDatabaseIstatDecessiWriter;
 begin
-  writer := TDecessiDatabaseIstatDecessiWriter.Create;
+  writer := TChunkedDecessiDatabaseIstatDecessiWriter.Create;
   writer.setListener(FWriterListener);
   writer.Connection := FConnection;
   Result := writer;
@@ -123,11 +146,13 @@ end;
 procedure TDecessiRunner.run;
 var
   reader: IItemReader<string>;
-  processore: IItemProcessor<string, TIstatDecessiRecord>;
-  writer: IItemWriter<TIstatDecessiRecord>;
-  item: TIstatDecessiRecord;
+  processore: IItemProcessor<string, PIstatDecessiRecord>;
+  writer: IChunkItemWriter<PIstatDecessiRecord>;
+  item: PIstatDecessiRecord;
   line: string = '';
   startTime: uint64 = 0;
+  chunk: TBaseChunk<PIstatDecessiRecord>;
+  index: integer;
 begin
   startTime := millis;
   processore := TDecessiProcessor.Create;
@@ -137,11 +162,23 @@ begin
   writer.Open;
   Writeln(Format('Prepared decessi in %s', [millisToString(millis() - startTime)], DefaultFormatSettings));
   reader.Read(line);
-  while reader.Read(line) do
+  while True do
   begin
-    line := StringReplace(line, '|', ',', [rfReplaceAll]);
-    item := processore.process(line);
-    writer.Write(item);
+    chunk := TBaseChunk<PIstatDecessiRecord>.Create;
+    index := 0;
+    while index < 256 do
+    begin
+      if reader.Read(line) then
+      begin
+        item := processore.process(line);
+        chunk.add(item);
+        Inc(index);
+      end
+      else
+        break;
+    end;
+    writer.Write(chunk);
+    FreeAndNil(chunk);
   end;
   reader.Close;
   writer.Close;
@@ -208,47 +245,49 @@ begin
   begin
     FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' ACTIVE');
   end;
+  FConnection.Commit;
   Result := inherited Close;
 end;
 
 { TDecessiProcessor }
 
-function TDecessiProcessor.process(const aIntput: string): TIstatDecessiRecord;
+function TDecessiProcessor.process(const aIntput: string): PIstatDecessiRecord;
 var
   cursor: PChar;
 begin
   cursor := PChar(aIntput);
-  with Result do
+  New(Result);
+  with Result^ do
   begin
-    ITTER107 := Next(Cursor);
-    Territorio := Next(Cursor);
-    TIPO_DATO15 := Next(Cursor);
-    Tipo_dato := Next(Cursor);
-    ETA1_A := Next(Cursor);
-    Eta := Next(Cursor);
-    SEXISTAT1 := Next(Cursor);
-    Sesso := Next(Cursor);
-    STATCIV2 := Next(Cursor);
-    Stato_civile := Next(Cursor);
-    TITOLO_STUDIO := Next(Cursor);
-    Istruzione := Next(Cursor);
-    T_BIS_A := Next(Cursor);
-    Mese_di_decesso := Next(Cursor);
-    T_BIS_B := Next(Cursor);
-    Anno_di_nascita := Next(Cursor);
-    ETA1_B := Next(Cursor);
-    Classe_di_eta_coniuge_superstite := Next(Cursor);
-    T_BIS_C := Next(Cursor);
-    Anno_di_matrimonio := Next(Cursor);
-    ISO := Next(Cursor);
-    Paese_di_cittadinanza := Next(Cursor);
-    CAUSEMORTE_SL := Next(Cursor);
-    Causa_iniziale_di_morte := Next(Cursor);
-    TIME := Next(Cursor);
-    Seleziona_periodo := Next(Cursor);
-    Value := Next(Cursor);
-    Flag_Codes := Next(Cursor);
-    Flags := Next(Cursor);
+    ITTER107 := Next(Cursor, '|');
+    Territorio := Next(Cursor, '|');
+    TIPO_DATO15 := Next(Cursor, '|');
+    Tipo_dato := Next(Cursor, '|');
+    ETA1_A := Next(Cursor, '|');
+    Eta := Next(Cursor, '|');
+    SEXISTAT1 := Next(Cursor, '|');
+    Sesso := Next(Cursor, '|');
+    STATCIV2 := Next(Cursor, '|');
+    Stato_civile := Next(Cursor, '|');
+    TITOLO_STUDIO := Next(Cursor, '|');
+    Istruzione := Next(Cursor, '|');
+    T_BIS_A := Next(Cursor, '|');
+    Mese_di_decesso := Next(Cursor, '|');
+    T_BIS_B := Next(Cursor, '|');
+    Anno_di_nascita := Next(Cursor, '|');
+    ETA1_B := Next(Cursor, '|');
+    Classe_di_eta_coniuge_superstite := Next(Cursor, '|');
+    T_BIS_C := Next(Cursor, '|');
+    Anno_di_matrimonio := Next(Cursor, '|');
+    ISO := Next(Cursor, '|');
+    Paese_di_cittadinanza := Next(Cursor, '|');
+    CAUSEMORTE_SL := Next(Cursor, '|');
+    Causa_iniziale_di_morte := Next(Cursor, '|');
+    TIME := Next(Cursor, '|');
+    Seleziona_periodo := Next(Cursor, '|');
+    Value := Next(Cursor, '|');
+    Flag_Codes := Next(Cursor, '|');
+    Flags := Next(Cursor, '|');
   end;
 end;
 

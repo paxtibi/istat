@@ -7,6 +7,8 @@ uses
   Classes, SysUtils, istat.batch, ZDbcIntfs, paxutils;
 
 type
+  PIstatPopolazioneRecord = ^TIstatPopolazioneRecord;
+
   TIstatPopolazioneRecord = record
     ITTER107: string;
     Territorio: string;
@@ -25,11 +27,10 @@ type
     Flags: string;
   end;
 
-
   { TPopolazioneProcessor }
 
-  TPopolazioneProcessor = class(TStringAbstractItemProcessor<TIstatPopolazioneRecord>)
-    function process(const aIntput: string): TIstatPopolazioneRecord; override;
+  TPopolazioneProcessor = class(TStringAbstractItemProcessor<PIstatPopolazioneRecord>)
+    function process(const aIntput: string): PIstatPopolazioneRecord; override;
   end;
 
   { TPopolazioneDatabaseIstatDecessiWriter }
@@ -41,6 +42,15 @@ type
     function Open: boolean; override;
     procedure Write(const item: TIstatPopolazioneRecord); override;
     function Close: boolean; override;
+  end;
+
+  { TChunkedPopolazioneDatabaseIstatDecessiWriter }
+
+  TChunkedPopolazioneDatabaseIstatDecessiWriter = class(TFirebirdChunkedDatabaseWriter<PIstatPopolazioneRecord>)
+  protected
+    function statement(item: PIstatPopolazioneRecord): rawbytestring; override;
+    function getTableName: string;
+  public
   end;
 
   { TPopolazioneRunner }
@@ -55,13 +65,28 @@ type
     procedure SetFileName(AValue: string);
   protected
     function getReaderDecessi: IStringReader;
-    function getWriterDecessi: IItemWriter<TIstatPopolazioneRecord>;
+    function getWriterDecessi: IChunkItemWriter<PIstatPopolazioneRecord>;
   public
     constructor Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
     procedure run;
   end;
 
 implementation
+
+{ TChunkedPopolazioneDatabaseIstatDecessiWriter }
+
+function TChunkedPopolazioneDatabaseIstatDecessiWriter.statement(item: PIstatPopolazioneRecord): rawbytestring;
+begin
+  with item^ do
+  begin
+    Result := Format('INSERT INTO ISTAT_POPOLAZIONE VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);', [QuotedStr(ITTER107), QuotedStr(Territorio), QuotedStr(TIPO_DATO15), QuotedStr(Tipo_di_indicatore_demografico), QuotedStr(SEXISTAT1), QuotedStr(Sesso), QuotedStr(ETA1), QuotedStr(Eta), QuotedStr(STATCIV2), QuotedStr(Stato_civile), QuotedStr(TIME), QuotedStr(Seleziona_periodo), QuotedStr(Value), QuotedStr(Flag_Codes), QuotedStr(Flags)]);
+  end;
+end;
+
+function TChunkedPopolazioneDatabaseIstatDecessiWriter.getTableName: string;
+begin
+  Result := 'ISTAT_POPOLAZIONE';
+end;
 
 { TPopolazioneRunner }
 
@@ -85,11 +110,11 @@ begin
   Result := reader;
 end;
 
-function TPopolazioneRunner.getWriterDecessi: IItemWriter<TIstatPopolazioneRecord>;
+function TPopolazioneRunner.getWriterDecessi: IChunkItemWriter<PIstatPopolazioneRecord>;
 var
-  writer: TPopolazioneDatabaseIstatDecessiWriter;
+  writer: TChunkedPopolazioneDatabaseIstatDecessiWriter;
 begin
-  writer := TPopolazioneDatabaseIstatDecessiWriter.Create;
+  writer := TChunkedPopolazioneDatabaseIstatDecessiWriter.Create;
   writer.Connection := FConnection;
   writer.setListener(FWriterListener);
   Result := writer;
@@ -106,11 +131,13 @@ end;
 procedure TPopolazioneRunner.run;
 var
   reader: IItemReader<string>;
-  processore: IItemProcessor<string, TIstatPopolazioneRecord>;
-  writer: IItemWriter<TIstatPopolazioneRecord>;
-  item: TIstatPopolazioneRecord;
+  processore: IItemProcessor<string, PIstatPopolazioneRecord>;
+  writer: IChunkItemWriter<PIstatPopolazioneRecord>;
+  item: PIstatPopolazioneRecord;
   line: string = '';
   startTime: uint64 = 0;
+  chunk: TBaseChunk<PIstatPopolazioneRecord>;
+  index: integer;
 begin
   startTime := millis;
   processore := TPopolazioneProcessor.Create;
@@ -119,12 +146,24 @@ begin
   reader.Open;
   writer.Open;
   Writeln(Format('Prepared popolazione in %s', [millisToString(millis() - startTime)], DefaultFormatSettings));
-  reader.Read(line); // Skip Header
-  while reader.Read(line) do
+  reader.Read(line);
+  while True do
   begin
-    line := StringReplace(line, '|', ',', [rfReplaceAll]);
-    item := processore.process(line);
-    writer.Write(item);
+    chunk := TBaseChunk<PIstatPopolazioneRecord>.Create;
+    index := 0;
+    while index < 256 do
+    begin
+      if reader.Read(line) then
+      begin
+        item := processore.process(line);
+        chunk.add(item);
+        Inc(index);
+      end
+      else
+        break;
+    end;
+    writer.Write(chunk);
+    FreeAndNil(chunk);
   end;
   reader.Close;
   writer.Close;
@@ -194,33 +233,35 @@ begin
   begin
     FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' ACTIVE');
   end;
+  FConnection.Commit;
   Result := inherited Close;
 end;
 
 { TPopolazioneProcessor }
 
-function TPopolazioneProcessor.process(const aIntput: string): TIstatPopolazioneRecord;
+function TPopolazioneProcessor.process(const aIntput: string): PIstatPopolazioneRecord;
 var
   cursor: PChar;
 begin
+  New(Result);
   cursor := PChar(aIntput);
-  with Result do
+  with Result^ do
   begin
-    ITTER107 := Next(Cursor);
-    Territorio := Next(Cursor);
-    TIPO_DATO15 := Next(Cursor);
-    Tipo_di_indicatore_demografico := Next(Cursor);
-    SEXISTAT1 := Next(Cursor);
-    Sesso := Next(Cursor);
-    ETA1 := Next(Cursor);
-    Eta := Next(Cursor);
-    STATCIV2 := Next(Cursor);
-    Stato_civile := Next(Cursor);
-    TIME := Next(Cursor);
-    Seleziona_periodo := Next(Cursor);
-    Value := Next(Cursor);
-    Flag_Codes := Next(Cursor);
-    Flags := Next(Cursor);
+    ITTER107 := Next(Cursor, '|');
+    Territorio := Next(Cursor, '|');
+    TIPO_DATO15 := Next(Cursor, '|');
+    Tipo_di_indicatore_demografico := Next(Cursor, '|');
+    SEXISTAT1 := Next(Cursor, '|');
+    Sesso := Next(Cursor, '|');
+    ETA1 := Next(Cursor, '|');
+    Eta := Next(Cursor, '|');
+    STATCIV2 := Next(Cursor, '|');
+    Stato_civile := Next(Cursor, '|');
+    TIME := Next(Cursor, '|');
+    Seleziona_periodo := Next(Cursor, '|');
+    Value := Next(Cursor, '|');
+    Flag_Codes := Next(Cursor, '|');
+    Flags := Next(Cursor, '|');
   end;
 end;
 

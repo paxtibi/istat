@@ -7,20 +7,24 @@ uses
   paxutils,
   istat.batch.decessi,
   istat.batch.popolazione,
-  Classes, SysUtils, CustApp, istat.batch, ZDbcIntfs;
+  Classes, SysUtils, CustApp, istat.batch, ZDbcIntfs, ZDbcLogging;
 
 type
   { TIstat }
-  TIstat = class(TCustomApplication)
+  TIstat = class(TCustomApplication, IZLoggingListener)
   protected
     FProperties: TProperties;
     FReadListener: IItemReaderListener;
     FWriteListener: IItemWriterListener;
+    FLoggingFormatter: TZLoggingFormatter;
+    FLogFile: Text;
     function prepareConnection: IZConnection;
     function getConnection: IZConnection;
     function getConnectionDML: IZConnection;
     procedure prepareDatabase;
     procedure DoRun; override;
+  protected
+    procedure LogEvent(Event: TZLoggingEvent);
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -72,24 +76,35 @@ begin
   try
     connection.CreateStatement.Execute('RECREATE TABLE ISTAT_DECESSI ' + LineEnding + // 0
       '( ' + LineEnding +// 0
-      '    ITTER107 varchar(8), ' + LineEnding +// 0
-      '    TERRITORIO varchar(100), ' + LineEnding +// 0
-      '    TIPO_DATO15 varchar(50), ' + LineEnding +// 0
-      '    ETA1 varchar(50), ' + LineEnding +// 0
-      '    SEXISTAT1 varchar(2), ' + LineEnding +// 0
-      '    STATCIV2 varchar(2), ' + LineEnding +// 0
-      '    TITOLO_STUDIO varchar(50), ' + LineEnding +// 0
-      '    T_BIS_A varchar(50), ' + LineEnding +// 0
-      '    T_BIS_B varchar(50), ' + LineEnding +// 0
-      '    ANNO_DI_NASCITA varchar(50), ' + LineEnding +// 0
-      '    ETA1_B varchar(50), ' + LineEnding +// 0
-      '    T_BIS_C varchar(50), ' + LineEnding +// 0
-      '    ANNO_DI_MATRIMONIO varchar(50), ' + LineEnding +// 0
-      '    ISO varchar(50), ' + LineEnding +// 0
-      '    CAUSEMORTE_SL varchar(50), ' + LineEnding +// 0
-      '    ANNO VARCHAR(20), ' + LineEnding +// 0
-      '    VALORE integer, ' + LineEnding +// 0
-      '    FLAG_CODES varchar(5) ' + LineEnding +// 0
+      'ITTER107 VARCHAR(50), ' + LineEnding + //0
+      'Territorio VARCHAR(50), ' + LineEnding + //0
+      'TIPO_DATO15 VARCHAR(50), ' + LineEnding + //0
+      'Tipo_dato VARCHAR(50), ' + LineEnding + //0
+      'ETA1_A VARCHAR(50), ' + LineEnding + //0
+      'Eta VARCHAR(50), ' + LineEnding + //0
+      'SEXISTAT1 VARCHAR(50), ' + LineEnding + //0
+      'Sesso VARCHAR(50), ' + LineEnding + //0
+      'STATCIV2 VARCHAR(50), ' + LineEnding + //0
+      'Stato_civile VARCHAR(250), ' + LineEnding + //0
+      'TITOLO_STUDIO VARCHAR(50), ' + LineEnding + //0
+      'Istruzione VARCHAR(250), ' + LineEnding + //0
+      'T_BIS_A VARCHAR(50), ' + LineEnding + //0
+      'Mese_di_decesso VARCHAR(50), ' + LineEnding + //0
+      'T_BIS_B VARCHAR(50), ' + LineEnding + //0
+      'Anno_di_nascita VARCHAR(50), ' + LineEnding + //0
+      'ETA1_B VARCHAR(50), ' + LineEnding + //0
+      'Classe_di_eta_coniuge VARCHAR(50), ' + LineEnding + //0
+      'T_BIS_C VARCHAR(50), ' + LineEnding + //0
+      'Anno_di_matrimonio VARCHAR(50), ' + LineEnding + //0
+      'ISO VARCHAR(50), ' + LineEnding + //0
+      'Paese_di_cittadinanza VARCHAR(250), ' + LineEnding + //0
+      'CAUSEMORTE_SL VARCHAR(50), ' + LineEnding + //0
+      'Causa_iniziale_di_morte VARCHAR(250), ' + LineEnding + //0
+      'ANNO VARCHAR(50), ' + LineEnding + //0
+      'Seleziona_periodo VARCHAR(50), ' + LineEnding + //0
+      'VALORE VARCHAR(50), ' + LineEnding + //0
+      'Flag_Codes VARCHAR(50), ' + LineEnding + //0
+      'Flags VARCHAR(50)' + LineEnding + //0
       ')' + LineEnding +// 0
       '');
   except
@@ -194,6 +209,12 @@ begin
   Terminate;
 end;
 
+procedure TIstat.LogEvent(Event: TZLoggingEvent);
+begin
+  if Event.Category in [lcExecPrepStmt, lcBindPrepStmt] then exit;
+  WriteLn(FLogFile, FLoggingFormatter.Format(Event));
+end;
+
 constructor TIstat.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
@@ -204,13 +225,22 @@ begin
   FProperties.load(ChangeFileExt(ApplicationName, '.properties'));
   if FileExists(FProperties.getProperty('database.path')) then
     DeleteFile(FProperties.getProperty('database.path'));
+  if FileExists(ChangeFileExt(ParamStr(0), '.log')) then
+    DeleteFile(ChangeFileExt(ParamStr(0), '.log'));
+  AssignFile(FLogFile, ChangeFileExt(ParamStr(0), '.log'));
+  Rewrite(FLogFile);
+
+  FLoggingFormatter := TZLoggingFormatter.Create;
+  DriverManager.AddLoggingListener(self);
 end;
 
 destructor TIstat.Destroy;
 begin
+  Flush(FLogFile);
   FReadListener := nil;
   FWriteListener := nil;
   FreeAndNil(FProperties);
+  DriverManager.RemoveLoggingListener(Self);
   inherited Destroy;
 end;
 

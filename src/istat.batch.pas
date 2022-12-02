@@ -5,7 +5,7 @@ unit istat.batch;
 interface
 
 uses
-  Classes, SysUtils, ZDbcIntfs;
+  Classes, SysUtils, ZDbcIntfs, fgl;
 
 type
   IItemReaderListener = interface
@@ -31,9 +31,7 @@ type
   end;
 
   IStringReader = interface(IItemReader<string>)
-    function Read(var item: string): boolean;
   end;
-
 
   IItemWriter<TItemType> = interface
     ['{E7FC1E44-7907-421C-8403-B5333714CEC2}']
@@ -43,6 +41,20 @@ type
     procedure setListener(listener: IItemWriterListener);
   end;
 
+  IChunk<TItemType> = interface
+    ['{32254F0A-A303-45C5-AD6E-507F715EBB98}']
+    function Count: integer;
+    function add(const item: TItemType): boolean;
+    function get(const index: integer): TItemType;
+  end;
+
+  IChunkItemWriter<TItemType> = interface
+    ['{E59FC978-116E-4D0E-A089-476DF7EF44C7}']
+    function Open: boolean;
+    procedure Write(const item: IChunk<TItemType>);
+    function Close: boolean;
+    procedure setListener(listener: IItemWriterListener);
+  end;
 
   IItemProcessor<TInputType, TOutputType> = interface
     ['{001C3B41-609E-4266-B860-2B687FB4304E}']
@@ -83,6 +95,18 @@ type
     procedure setListener(listener: IItemWriterListener);
   end;
 
+  { TAbstractChunkItemWriter }
+
+  TAbstractChunkItemWriter<TItemType> = class(TInterfacedObject, IChunkItemWriter<TItemType>)
+  protected
+    FListener: IItemWriterListener;
+  public
+    function Open: boolean; virtual; abstract;
+    procedure Write(const item: IChunk<TItemType>); virtual; abstract;
+    function Close: boolean; virtual; abstract;
+    procedure setListener(listener: IItemWriterListener);
+  end;
+
   { TFlatFileReader }
 
   TFlatFileReader = class(TAbstractItemReader<string>, IStringReader)
@@ -100,7 +124,7 @@ type
 
   { TAbstractDatabaseWriter }
 
-  TAbstractDatabaseWriter<aItemWriter> = class(TAbstractItemWriter<aItemWriter>)
+  TAbstractDatabaseWriter<TItemType> = class(TAbstractItemWriter<TItemType>)
   protected
     FConnection: IZConnection;
     procedure SetConnection(AValue: IZConnection);
@@ -111,11 +135,48 @@ type
     property Connection: IZConnection read FConnection write SetConnection;
   end;
 
+  { TAbstractChunkedDatabaseWriter }
+
+  TAbstractChunkedDatabaseWriter<TItemType> = class(TAbstractChunkItemWriter<TItemType>)
+  protected
+    FConnection: IZConnection;
+    procedure SetConnection(AValue: IZConnection);
+  public
+    function Open: boolean; override;
+    function Close: boolean; override;
+  public
+    property Connection: IZConnection read FConnection write SetConnection;
+  end;
+
+  { TFirebirdChunkedDatabaseWriter }
+
+  TFirebirdChunkedDatabaseWriter<TItemType> = class(TAbstractChunkedDatabaseWriter<TItemType>)
+  protected
+    function statement(item: TItemType): rawbytestring; virtual; abstract;
+    function getTableName: string;
+  public
+    function Open: boolean; override;
+    function Close: boolean; override;
+    procedure Write(const items: IChunk<TItemType>); override;
+  end;
+
+  TBaseChunk<TItemType> = class(TInterfacedObject, IChunk<TItemType>)
+  protected
+    fChunk: TFPGList<TItemType>;
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+
+    function Count: integer; virtual;
+    function add(const item: TItemType): boolean; virtual;
+    function get(const index: integer): TItemType; virtual;
+  end;
+
   { TStringAbstractItemProcessor }
 
   TStringAbstractItemProcessor<OutputItem> = class(TInterfacedObject, IItemProcessor<string, OutputItem>)
   protected
-    function Next(var cursor: PChar): string;
+    function Next(var cursor: PChar; separator: char = ','): string;
   public
     function process(const aIntput: string): OutputItem; virtual; abstract;
   end;
@@ -166,22 +227,21 @@ type
 
 implementation
 
-
 { TAbstractDatabaseWriter }
 
-procedure TAbstractDatabaseWriter<aItemWriter>.SetConnection(AValue: IZConnection);
+procedure TAbstractDatabaseWriter<TItemType>.SetConnection(AValue: IZConnection);
 begin
   if FConnection = AValue then Exit;
   FConnection := AValue;
 end;
 
-function TAbstractDatabaseWriter<aItemWriter>.Open: boolean;
+function TAbstractDatabaseWriter<TItemType>.Open: boolean;
 begin
   FConnection.Open;
   Result := True;
 end;
 
-function TAbstractDatabaseWriter<aItemWriter>.Close: boolean;
+function TAbstractDatabaseWriter<TItemType>.Close: boolean;
 begin
   if not FConnection.IsClosed then
     FConnection.Close;
@@ -190,7 +250,7 @@ end;
 
 { TStringAbstractItemProcessor }
 
-function TStringAbstractItemProcessor<OutputItem>.Next(var cursor: PChar): string;
+function TStringAbstractItemProcessor<OutputItem>.Next(var cursor: PChar; separator: char): string;
 begin
   Result := '';
   while (cursor^ <> #0) do
@@ -204,17 +264,18 @@ begin
           Inc(cursor);
         end;
         if cursor^ = '"' then Inc(cursor);
-        if cursor^ = ',' then Inc(cursor);
+        if cursor^ = separator then Inc(cursor);
         exit(Result);
       end;
-      ',':
-      begin
-        Inc(cursor);
-        exit(Result);
-      end
       else
       begin
-        Result += cursor^;
+        if cursor^ = separator then
+        begin
+          Inc(cursor);
+          exit(Result);
+        end
+        else
+          Result += cursor^;
       end;
     end;
     Inc(cursor);
@@ -267,12 +328,126 @@ begin
   fWriter := aItem;
 end;
 
+{ TAbstractChunkItemWriter }
+
+procedure TAbstractChunkItemWriter<TItemType>.setListener(listener: IItemWriterListener);
+begin
+  FListener := listener;
+end;
+
+{ TAbstractChunkedDatabaseWriter }
+
+procedure TAbstractChunkedDatabaseWriter<TItemType>.SetConnection(AValue: IZConnection);
+begin
+  FConnection := AValue;
+end;
+
+function TAbstractChunkedDatabaseWriter<TItemType>.Open: boolean;
+begin
+  FConnection.Open;
+  Result := True;
+end;
+
+function TAbstractChunkedDatabaseWriter<TItemType>.Close: boolean;
+begin
+  if not FConnection.IsClosed then
+    FConnection.Close;
+  Result := True;
+end;
+
+function TFirebirdChunkedDatabaseWriter<TItemType>.getTableName: string;
+begin
+
+end;
+
+function TFirebirdChunkedDatabaseWriter<TItemType>.Open: boolean;
+var
+  RS: IZResultSet;
+begin
+  Result := inherited Open;
+  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 0 and RDB$RELATION_NAME = ''' + getTableName + '''');
+  while RS.Next do
+  begin
+    FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' INACTIVE');
+  end;
+  FConnection.Commit;
+end;
+
+function TFirebirdChunkedDatabaseWriter<TItemType>.Close: boolean;
+var
+  RS: IZResultSet;
+begin
+  Result := inherited Close;
+  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 0 and RDB$RELATION_NAME = ''' + getTableName + '''');
+  while RS.Next do
+  begin
+    FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' ACTIVE');
+  end;
+  FConnection.Commit;
+end;
+
+procedure TFirebirdChunkedDatabaseWriter<TItemType>.Write(const items: IChunk<TItemType>);
+var
+  sql: string;
+  idx: integer;
+begin
+  sql := 'execute block' + LineEnding + // 0
+    'as' + LineEnding +// 0
+    '  begin' + LineEnding;
+  for idx := 0 to items.Count - 1 do
+  begin
+    sql += '    ' + statement(items.get(idx)) + LineEnding;
+    FListener.writeCount;
+  end;
+  // 0
+  sql += '  end' + LineEnding +// 0
+    ';';
+  try
+    if FConnection.CreateStatement.Execute(sql) then
+    begin
+      FConnection.Commit;
+    end;
+  except
+    On  E: Exception do
+    begin
+      Writeln(E.Message);
+    end;
+  end;
+end;
+
+
+procedure TBaseChunk<TItemType>.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fChunk := TFPGList<TItemType>.Create;
+end;
+
+procedure TBaseChunk<TItemType>.BeforeDestruction;
+begin
+  FreeAndNil(fChunk);
+  inherited BeforeDestruction;
+end;
+
+function TBaseChunk<TItemType>.Count: integer;
+begin
+  Result := fChunk.Count;
+end;
+
+function TBaseChunk<TItemType>.add(const item: TItemType): boolean;
+begin
+  fChunk.add(item);
+end;
+
+function TBaseChunk<TItemType>.get(const index: integer): TItemType;
+begin
+  Result := fChunk[index];
+end;
+
 { TItemWriterListener }
 
 constructor TItemWriterListener.Create;
 begin
   InitCriticalSection(fLock);
-
 end;
 
 destructor TItemWriterListener.Destroy;
