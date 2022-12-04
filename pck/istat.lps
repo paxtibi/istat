@@ -15,18 +15,18 @@
       <Unit>
         <Filename Value="..\src\istat.application.pas"/>
         <IsPartOfProject Value="True"/>
-        <TopLine Value="181"/>
-        <CursorPos Y="194"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="7"/>
+        <CursorPos X="30" Y="24"/>
         <UsageCount Value="179"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.batch.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="464"/>
-        <CursorPos X="23" Y="481"/>
+        <TopLine Value="145"/>
+        <CursorPos X="45" Y="161"/>
         <UsageCount Value="179"/>
         <Loaded Value="True"/>
       </Unit>
@@ -129,7 +129,7 @@
         <Filename Value="..\src\istat.xml"/>
         <EditorIndex Value="4"/>
         <CursorPos X="32" Y="3"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="15"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="XML"/>
       </Unit>
@@ -151,53 +151,6 @@
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="457" Column="31" TopLine="437"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="460" Column="34" TopLine="437"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="245" Column="32" TopLine="237"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="541" Column="30" TopLine="537"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="246" Column="15" TopLine="229"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="551" TopLine="546"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="550" Column="44" TopLine="543"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="549" TopLine="543"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="550" TopLine="543"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="551" TopLine="543"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.decessi.pas"/>
-        <Caret Line="173" Column="20" TopLine="161"/>
-      </Position>
       <Position>
         <Filename Value="..\src\istat.batch.pas"/>
         <Caret Line="524" Column="26" TopLine="512"/>
@@ -269,6 +222,54 @@
       <Position>
         <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
         <Caret Line="491" Column="21" TopLine="475"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.pas"/>
+        <Caret Line="484" Column="38" TopLine="464"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="199" Column="47" TopLine="181"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="24" Column="15" TopLine="9"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="158" Column="65" TopLine="133"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="25" Column="30" TopLine="7"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="259" Column="24" TopLine="238"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="26" Column="17" TopLine="10"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="252" Column="19" TopLine="247"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="25" Column="15" TopLine="9"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="211" Column="26" TopLine="196"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="23" Column="14" TopLine="7"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.application.pas"/>
+        <Caret Line="78" Column="3" TopLine="76"/>
       </Position>
     </JumpHistory>
     <RunParams>

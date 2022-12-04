@@ -459,7 +459,7 @@ begin
   if activeTasks = nil then
   begin
     activeTasks := TTaskQueue.Create;
-    activeTasks.Semaphore := TSemaphore.Create(5);
+    activeTasks.Semaphore := TSemaphore.Create(10);
   end;
   Count := 0;
   sql := '';
@@ -487,7 +487,7 @@ begin
     Sleep(10);
   activeTasks.Stop;
   FreeAndNil(activeTasks);
-  //FConnection.Commit;
+  FConnection.Commit;
 end;
 
 procedure TBaseChunk<TItemType>.AfterConstruction;

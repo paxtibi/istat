@@ -22,6 +22,7 @@ type
     function getConnection: IZConnection;
     function getConnectionDML: IZConnection;
     procedure prepareDatabase;
+    procedure terminaAttivita;
     procedure DoRun; override;
   protected
     procedure LogEvent(Event: TZLoggingEvent);
@@ -152,6 +153,33 @@ begin
   end;
 
   try
+    Connection.CreateStatement.Execute('RECREATE TABLE ISTAT_POPOLAZIONE_ITALIANA ' + LineEnding + // 0
+      '( ' + LineEnding +// 0
+      '    ITTER107 VARCHAR(50), ' + LineEnding + // 0
+      '    Territorio VARCHAR(100), ' + LineEnding + // 0
+      '    TIPO_DATO15 VARCHAR(50), ' + LineEnding + // 0
+      '    Tipo_di_indicatore VARCHAR(50), ' + LineEnding + // 0
+      '    SEXISTAT1 VARCHAR(50), ' + LineEnding + // 0
+      '    Sesso VARCHAR(50), ' + LineEnding + // 0
+      '    ETA1 VARCHAR(50), ' + LineEnding + // 0
+      '    Eta VARCHAR(50), ' + LineEnding + // 0
+      '    STATCIV2 VARCHAR(50), ' + LineEnding + // 0
+      '    Stato_civile VARCHAR(50), ' + LineEnding + // 0
+      '    ANNO VARCHAR(20), ' + LineEnding + // 0
+      '    Seleziona_periodo VARCHAR(50), ' + LineEnding + // 0
+      '    VALORE INTEGER, ' + LineEnding + // 0
+      '    Flag_Codes VARCHAR(50), ' + LineEnding + // 0
+      '    Flags VARCHAR(50) ' + LineEnding + // 0
+      ')' + LineEnding + // 0
+      '');
+  except
+    on E: Exception do
+    begin
+      WriteLn(e.Message);
+    end;
+  end;
+
+  try
     connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_1 ON ISTAT_DECESSI (CAUSEMORTE_SL);');
     connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_2 ON ISTAT_DECESSI (ANNO);');
     connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_3 ON ISTAT_DECESSI (TITOLO_STUDIO);');
@@ -175,6 +203,11 @@ begin
     end;
   end;
   connection.Commit;
+end;
+
+procedure TIstat.terminaAttivita;
+begin
+  getConnectionDML.CreateStatement.Execute('INSERT INTO ISTAT_POPOLAZIONE_ITALIANA SELECT * FROM ISTAT_POPOLAZIONE WHERE ITTER107=''IT''');
 end;
 
 
@@ -216,6 +249,7 @@ begin
   activeTasks.Stop;
 
   Writeln(Format('Total Read : %10n -> Write : %10n in %s', [FReadListener.totalCount * 1.0, FWriteListener.totalCount * 1.0, millisToString(millis() - globalTime)], DefaultFormatSettings));
+  terminaAttivita;
   Terminate;
 end;
 
