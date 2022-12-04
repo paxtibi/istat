@@ -486,7 +486,6 @@ begin
   writer := getWriterDecessi;
   reader.Open;
   writer.Open;
-  reader.Read(line);
   done := False;
   while not done do
   begin
@@ -671,10 +670,13 @@ begin
 end;
 
 function TFlatFileReader.Open: boolean;
+var
+  item: string;
 begin
   AssignFile(FFile, FFileName);
   Reset(FFile);
   Result := True;
+  ReadLn(FFile, item);
 end;
 
 function TFlatFileReader.Read(var item: string): boolean;
