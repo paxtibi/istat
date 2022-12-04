@@ -88,34 +88,34 @@ begin
     connection.CreateStatement.Execute('RECREATE TABLE ISTAT_DECESSI ' + LineEnding + // 0
       '( ' + LineEnding +// 0
       'ITTER107 VARCHAR(50), ' + LineEnding + //0
-      'Territorio VARCHAR(50), ' + LineEnding + //0
+      'TERRITORIO VARCHAR(50), ' + LineEnding + //0
       'TIPO_DATO15 VARCHAR(50), ' + LineEnding + //0
-      'Tipo_dato VARCHAR(50), ' + LineEnding + //0
+      'TIPO_DATO VARCHAR(50), ' + LineEnding + //0
       'ETA1_A VARCHAR(50), ' + LineEnding + //0
-      'Eta VARCHAR(50), ' + LineEnding + //0
+      'ETA VARCHAR(50), ' + LineEnding + //0
       'SEXISTAT1 VARCHAR(50), ' + LineEnding + //0
-      'Sesso VARCHAR(50), ' + LineEnding + //0
+      'SESSO VARCHAR(50), ' + LineEnding + //0
       'STATCIV2 VARCHAR(50), ' + LineEnding + //0
-      'Stato_civile VARCHAR(250), ' + LineEnding + //0
+      'STATO_CIVILE VARCHAR(250), ' + LineEnding + //0
       'TITOLO_STUDIO VARCHAR(50), ' + LineEnding + //0
-      'Istruzione VARCHAR(250), ' + LineEnding + //0
+      'ISTRUZIONE VARCHAR(250), ' + LineEnding + //0
       'T_BIS_A VARCHAR(50), ' + LineEnding + //0
-      'Mese_di_decesso VARCHAR(50), ' + LineEnding + //0
+      'MESE_DI_DECESSO VARCHAR(50), ' + LineEnding + //0
       'T_BIS_B VARCHAR(50), ' + LineEnding + //0
-      'Anno_di_nascita VARCHAR(50), ' + LineEnding + //0
+      'ANNO_DI_NASCITA VARCHAR(50), ' + LineEnding + //0
       'ETA1_B VARCHAR(50), ' + LineEnding + //0
-      'Classe_di_eta_coniuge VARCHAR(50), ' + LineEnding + //0
+      'CLASSE_DI_ETA_CONIUGE VARCHAR(50), ' + LineEnding + //0
       'T_BIS_C VARCHAR(50), ' + LineEnding + //0
-      'Anno_di_matrimonio VARCHAR(50), ' + LineEnding + //0
+      'ANNO_DI_MATRIMONIO VARCHAR(50), ' + LineEnding + //0
       'ISO VARCHAR(50), ' + LineEnding + //0
-      'Paese_di_cittadinanza VARCHAR(250), ' + LineEnding + //0
+      'PAESE_DI_CITTADINANZA VARCHAR(250), ' + LineEnding + //0
       'CAUSEMORTE_SL VARCHAR(50), ' + LineEnding + //0
-      'Causa_iniziale_di_morte VARCHAR(250), ' + LineEnding + //0
+      'CAUSA_INIZIALE_DI_MORTE VARCHAR(250), ' + LineEnding + //0
       'ANNO VARCHAR(50), ' + LineEnding + //0
-      'Seleziona_periodo VARCHAR(50), ' + LineEnding + //0
+      'SELEZIONA_PERIODO VARCHAR(50), ' + LineEnding + //0
       'VALORE VARCHAR(50), ' + LineEnding + //0
-      'Flag_Codes VARCHAR(50), ' + LineEnding + //0
-      'Flags VARCHAR(50)' + LineEnding + //0
+      'FLAG_CODES VARCHAR(50), ' + LineEnding + //0
+      'FLAGS VARCHAR(50)' + LineEnding + //0
       ')' + LineEnding +// 0
       '');
   except
@@ -129,20 +129,20 @@ begin
     Connection.CreateStatement.Execute('RECREATE TABLE ISTAT_POPOLAZIONE ' + LineEnding + // 0
       '( ' + LineEnding +// 0
       '    ITTER107 VARCHAR(50), ' + LineEnding + // 0
-      '    Territorio VARCHAR(100), ' + LineEnding + // 0
+      '    TERRITORIO VARCHAR(100), ' + LineEnding + // 0
       '    TIPO_DATO15 VARCHAR(50), ' + LineEnding + // 0
-      '    Tipo_di_indicatore VARCHAR(50), ' + LineEnding + // 0
+      '    TIPO_DI_INDICATORE VARCHAR(50), ' + LineEnding + // 0
       '    SEXISTAT1 VARCHAR(50), ' + LineEnding + // 0
-      '    Sesso VARCHAR(50), ' + LineEnding + // 0
+      '    SESSO VARCHAR(50), ' + LineEnding + // 0
       '    ETA1 VARCHAR(50), ' + LineEnding + // 0
-      '    Eta VARCHAR(50), ' + LineEnding + // 0
+      '    ETA VARCHAR(50), ' + LineEnding + // 0
       '    STATCIV2 VARCHAR(50), ' + LineEnding + // 0
-      '    Stato_civile VARCHAR(50), ' + LineEnding + // 0
+      '    STATO_CIVILE VARCHAR(50), ' + LineEnding + // 0
       '    ANNO VARCHAR(20), ' + LineEnding + // 0
-      '    Seleziona_periodo VARCHAR(50), ' + LineEnding + // 0
+      '    SELEZIONA_PERIODO VARCHAR(50), ' + LineEnding + // 0
       '    VALORE INTEGER, ' + LineEnding + // 0
-      '    Flag_Codes VARCHAR(50), ' + LineEnding + // 0
-      '    Flags VARCHAR(50) ' + LineEnding + // 0
+      '    FLAG_CODES VARCHAR(50), ' + LineEnding + // 0
+      '    FLAGS VARCHAR(50) ' + LineEnding + // 0
       ')' + LineEnding + // 0
       '');
   except
@@ -156,20 +156,20 @@ begin
     Connection.CreateStatement.Execute('RECREATE TABLE ISTAT_POPOLAZIONE_ITALIANA ' + LineEnding + // 0
       '( ' + LineEnding +// 0
       '    ITTER107 VARCHAR(50), ' + LineEnding + // 0
-      '    Territorio VARCHAR(100), ' + LineEnding + // 0
+      '    TERRITORIO VARCHAR(100), ' + LineEnding + // 0
       '    TIPO_DATO15 VARCHAR(50), ' + LineEnding + // 0
-      '    Tipo_di_indicatore VARCHAR(50), ' + LineEnding + // 0
+      '    TIPO_DI_INDICATORE VARCHAR(50), ' + LineEnding + // 0
       '    SEXISTAT1 VARCHAR(50), ' + LineEnding + // 0
-      '    Sesso VARCHAR(50), ' + LineEnding + // 0
+      '    SESSO VARCHAR(50), ' + LineEnding + // 0
       '    ETA1 VARCHAR(50), ' + LineEnding + // 0
-      '    Eta VARCHAR(50), ' + LineEnding + // 0
+      '    ETA VARCHAR(50), ' + LineEnding + // 0
       '    STATCIV2 VARCHAR(50), ' + LineEnding + // 0
-      '    Stato_civile VARCHAR(50), ' + LineEnding + // 0
+      '    STATO_CIVILE VARCHAR(50), ' + LineEnding + // 0
       '    ANNO VARCHAR(20), ' + LineEnding + // 0
-      '    Seleziona_periodo VARCHAR(50), ' + LineEnding + // 0
+      '    SELEZIONA_PERIODO VARCHAR(50), ' + LineEnding + // 0
       '    VALORE INTEGER, ' + LineEnding + // 0
-      '    Flag_Codes VARCHAR(50), ' + LineEnding + // 0
-      '    Flags VARCHAR(50) ' + LineEnding + // 0
+      '    FLAG_CODES VARCHAR(50), ' + LineEnding + // 0
+      '    FLAGS VARCHAR(50) ' + LineEnding + // 0
       ')' + LineEnding + // 0
       '');
   except
@@ -178,7 +178,14 @@ begin
       WriteLn(e.Message);
     end;
   end;
+  connection.Commit;
+end;
 
+procedure TIstat.terminaAttivita;
+var
+  connection: IZConnection;
+begin
+  connection := getConnectionDML;
   try
     connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_1 ON ISTAT_DECESSI (CAUSEMORTE_SL);');
     connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_2 ON ISTAT_DECESSI (ANNO);');
@@ -202,12 +209,8 @@ begin
       WriteLn(e.Message);
     end;
   end;
-  connection.Commit;
-end;
 
-procedure TIstat.terminaAttivita;
-begin
-  getConnectionDML.CreateStatement.Execute('INSERT INTO ISTAT_POPOLAZIONE_ITALIANA SELECT * FROM ISTAT_POPOLAZIONE WHERE ITTER107=''IT''');
+  Connection.CreateStatement.Execute('INSERT INTO ISTAT_POPOLAZIONE_ITALIANA SELECT * FROM ISTAT_POPOLAZIONE WHERE ITTER107=''IT''');
 end;
 
 
@@ -227,6 +230,8 @@ begin
   activeTasks := TTaskQueue.Create;
   activeTasks.Semaphore := TSemaphore.Create(2);
 
+  prepareDatabase;
+
   task := TTask.Create();
   task.runner := TPopolazioneRunner.Create(FProperties.getProperty('import.popolazione'), getConnection(), FReadListener, FWriteListener);
   activeTasks.add(task);
@@ -234,8 +239,6 @@ begin
   task := TTask.Create();
   task.runner := TDecessiRunner.Create(FProperties.getProperty('import.decessi'), getConnection(), FReadListener, FWriteListener);
   activeTasks.add(task);
-
-  prepareDatabase;
 
   activeTasks.Start;
   while activeTasks.workingCount > 0 do
@@ -247,6 +250,7 @@ begin
     end;
   end;
   activeTasks.Stop;
+  activeTasks.Terminate;
 
   Writeln(Format('Total Read : %10n -> Write : %10n in %s', [FReadListener.totalCount * 1.0, FWriteListener.totalCount * 1.0, millisToString(millis() - globalTime)], DefaultFormatSettings));
   terminaAttivita;

@@ -3,7 +3,7 @@ program istat;
 {$mode objfpc}{$H+}
 
 uses
- {$IFDEF UNIX}cthreads, {$ENDIF}
+ {$IFDEF UNIX}cthreads,    {$ENDIF}
   Classes,
   SysUtils,
   CustApp,
@@ -13,6 +13,7 @@ uses
   zparsesql,
   zplain,
   istat.batch,
+  istat.batch.firebird,
   istat.batch.decessi,
   istat.batch.popolazione;
 

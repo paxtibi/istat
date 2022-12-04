@@ -4,7 +4,7 @@ unit istat.batch.popolazione;
 interface
 
 uses
-  Classes, SysUtils, istat.batch, ZDbcIntfs, paxutils;
+  Classes, SysUtils, istat.batch, istat.batch.firebird, ZDbcIntfs, paxutils;
 
 type
   PIstatPopolazioneRecord = ^TIstatPopolazioneRecord;
@@ -29,19 +29,16 @@ type
 
   { TPopolazioneProcessor }
 
-  TPopolazioneProcessor = class(TStringAbstractItemProcessor<PIstatPopolazioneRecord>)
+  TPopolazioneProcessor = class(TStringAbstractItemProcessor<PIstatPopolazioneRecord>, IStringProcessor<PIstatPopolazioneRecord>)
     function process(const aIntput: string): PIstatPopolazioneRecord; override;
   end;
 
   { TPopolazioneDatabaseIstatDecessiWriter }
 
-  TPopolazioneDatabaseIstatDecessiWriter = class(TAbstractDatabaseWriter<TIstatPopolazioneRecord>)
-  protected
-    FStatement: IZPreparedStatement;
+  TPopolazioneDatabaseIstatDecessiWriter = class(TFirebirdDatabaseWriter<TIstatPopolazioneRecord>)
   public
     function Open: boolean; override;
     procedure Write(const item: TIstatPopolazioneRecord); override;
-    function Close: boolean; override;
   end;
 
   { TChunkedPopolazioneDatabaseIstatDecessiWriter }
@@ -55,20 +52,11 @@ type
 
   { TPopolazioneRunner }
 
-  TPopolazioneRunner = class(TInterfacedObject, IRunnable)
-  private
-    FConnection: IZConnection;
-    FFileName: string;
-    FReaderListener: IItemReaderListener;
-    FWriterListener: IItemWriterListener;
-    procedure SetConnection(AValue: IZConnection);
-    procedure SetFileName(AValue: string);
+  TPopolazioneRunner = class(TFirebirdStepRunner<PIstatPopolazioneRecord>)
   protected
-    function getReaderDecessi: IStringReader;
-    function getWriterDecessi: IChunkItemWriter<PIstatPopolazioneRecord>;
-  public
-    constructor Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
-    procedure run;
+    function getReaderDecessi: IStringReader; override;
+    function getWriterDecessi: IChunkItemWriter<PIstatPopolazioneRecord>; override;
+    function getProcessor: IStringProcessor<PIstatPopolazioneRecord>; override;
   end;
 
 implementation
@@ -86,18 +74,6 @@ end;
 function TChunkedPopolazioneDatabaseIstatDecessiWriter.getTableName: string;
 begin
   Result := 'ISTAT_POPOLAZIONE';
-end;
-
-{ TPopolazioneRunner }
-
-procedure TPopolazioneRunner.SetConnection(AValue: IZConnection);
-begin
-  FConnection := AValue;
-end;
-
-procedure TPopolazioneRunner.SetFileName(AValue: string);
-begin
-  FFileName := AValue;
 end;
 
 function TPopolazioneRunner.getReaderDecessi: IStringReader;
@@ -120,73 +96,16 @@ begin
   Result := writer;
 end;
 
-constructor TPopolazioneRunner.Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
+function TPopolazioneRunner.getProcessor: IStringProcessor<PIstatPopolazioneRecord>;
 begin
-  FConnection := aConnection;
-  FFileName := aFileName;
-  FReaderListener := aReaderListener;
-  FWriterListener := aWriterListener;
+  Result := TPopolazioneProcessor.Create;
 end;
-
-procedure TPopolazioneRunner.run;
-var
-  reader: IItemReader<string>;
-  processore: IItemProcessor<string, PIstatPopolazioneRecord>;
-  writer: IChunkItemWriter<PIstatPopolazioneRecord>;
-  item: PIstatPopolazioneRecord;
-  line: string = '';
-  startTime: uint64 = 0;
-  chunk: TBaseChunk<PIstatPopolazioneRecord>;
-  index: integer;
-begin
-  startTime := millis;
-  processore := TPopolazioneProcessor.Create;
-  reader := getReaderDecessi;
-  writer := getWriterDecessi;
-  reader.Open;
-  writer.Open;
-  Writeln(Format('Prepared popolazione in %s', [millisToString(millis() - startTime)], DefaultFormatSettings));
-  reader.Read(line);
-  while True do
-  begin
-    chunk := TBaseChunk<PIstatPopolazioneRecord>.Create;
-    index := 0;
-    while index < 256*100 do
-    begin
-      if reader.Read(line) then
-      begin
-        item := processore.process(line);
-        chunk.add(item);
-        Inc(index);
-      end
-      else
-        break;
-    end;
-    writer.Write(chunk);
-    FreeAndNil(chunk);
-  end;
-  reader.Close;
-  writer.Close;
-  FConnection.Commit;
-  FConnection := nil;
-end;
-
 
 { TPopolazioneDatabaseIstatDecessiWriter }
 
 function TPopolazioneDatabaseIstatDecessiWriter.Open: boolean;
-var
-  RS: IZResultSet;
 begin
-  Result := inherited Open;
-  FConnection.Commit;
-  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 0 and RDB$RELATION_NAME = ''ISTAT_POPOLAZIONE''');
-  while RS.Next do
-  begin
-    FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' INACTIVE');
-  end;
   FStatement := FConnection.PrepareStatement('INSERT INTO ISTAT_POPOLAZIONE VALUES(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?)');
-  FConnection.Commit;
 end;
 
 procedure TPopolazioneDatabaseIstatDecessiWriter.Write(const item: TIstatPopolazioneRecord);
@@ -224,27 +143,14 @@ begin
   end;
 end;
 
-function TPopolazioneDatabaseIstatDecessiWriter.Close: boolean;
-var
-  RS: IZResultSet;
-begin
-  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 0 and RDB$RELATION_NAME = ''ISTAT_DECESSI''');
-  while RS.Next do
-  begin
-    FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' ACTIVE');
-  end;
-  FConnection.Commit;
-  Result := inherited Close;
-end;
-
 { TPopolazioneProcessor }
 
 function TPopolazioneProcessor.process(const aIntput: string): PIstatPopolazioneRecord;
 var
   cursor: PChar;
 begin
-  New(Result);
   cursor := PChar(aIntput);
+  New(Result);
   with Result^ do
   begin
     ITTER107 := Next(Cursor, '|');

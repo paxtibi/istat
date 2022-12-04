@@ -5,7 +5,7 @@ unit istat.batch.decessi;
 interface
 
 uses
-  Classes, SysUtils, istat.batch, ZDbcIntfs, paxutils;
+  Classes, SysUtils, istat.batch, istat.batch.firebird, ZDbcIntfs, paxutils;
 
 type
   PIstatDecessiRecord = ^TIstatDecessiRecord;
@@ -50,13 +50,10 @@ type
 
   { TDecessiDatabaseIstatDecessiWriter }
 
-  TDecessiDatabaseIstatDecessiWriter = class(TAbstractDatabaseWriter<TIstatDecessiRecord>)
-  protected
-    FStatement: IZPreparedStatement;
+  TDecessiDatabaseIstatDecessiWriter = class(TFirebirdDatabaseWriter<TIstatDecessiRecord>)
   public
     function Open: boolean; override;
     procedure Write(const item: TIstatDecessiRecord); override;
-    function Close: boolean; override;
   end;
 
   { TChunkedDecessiDatabaseIstatDecessiWriter }
@@ -69,20 +66,11 @@ type
 
   { TDecessiRunner }
 
-  TDecessiRunner = class(TInterfacedObject, IRunnable)
-  private
-    FConnection: IZConnection;
-    FFileName: string;
-    FReaderListener: IItemReaderListener;
-    FWriterListener: IItemWriterListener;
-    procedure SetConnection(AValue: IZConnection);
-    procedure SetFileName(AValue: string);
+  TDecessiRunner = class(TFirebirdStepRunner<PIstatDecessiRecord>)
   protected
-    function getReaderDecessi: IStringReader;
-    function getWriterDecessi: IChunkItemWriter<PIstatDecessiRecord>;
-  public
-    constructor Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
-    procedure run;
+    function getReaderDecessi: IStringReader; override;
+    function getWriterDecessi: IChunkItemWriter<PIstatDecessiRecord>; override;
+    function getProcessor: IStringProcessor<PIstatDecessiRecord>; override;
   end;
 
 implementation
@@ -101,18 +89,6 @@ begin
 end;
 
 { TDecessiRunner }
-
-procedure TDecessiRunner.SetConnection(AValue: IZConnection);
-begin
-  if FConnection = AValue then Exit;
-  FConnection := AValue;
-end;
-
-procedure TDecessiRunner.SetFileName(AValue: string);
-begin
-  if FFileName = AValue then Exit;
-  FFileName := AValue;
-end;
 
 function TDecessiRunner.getReaderDecessi: IStringReader;
 var
@@ -134,71 +110,17 @@ begin
   Result := writer;
 end;
 
-constructor TDecessiRunner.Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
+function TDecessiRunner.getProcessor: IStringProcessor<PIstatDecessiRecord>;
 begin
-  FFileName := aFileName;
-  FConnection := aConnection;
-  FWriterListener := aWriterListener;
-  FReaderListener := aReaderListener;
-end;
-
-procedure TDecessiRunner.run;
-var
-  reader: IItemReader<string>;
-  processore: IItemProcessor<string, PIstatDecessiRecord>;
-  writer: IChunkItemWriter<PIstatDecessiRecord>;
-  item: PIstatDecessiRecord;
-  line: string = '';
-  startTime: uint64 = 0;
-  chunk: TBaseChunk<PIstatDecessiRecord>;
-  index: integer;
-begin
-  startTime := millis;
-  processore := TDecessiProcessor.Create;
-  reader := getReaderDecessi;
-  writer := getWriterDecessi;
-  reader.Open;
-  writer.Open;
-  Writeln(Format('Prepared decessi in %s', [millisToString(millis() - startTime)], DefaultFormatSettings));
-  reader.Read(line);
-  while True do
-  begin
-    chunk := TBaseChunk<PIstatDecessiRecord>.Create;
-    index := 0;
-    while index < 256*100 do
-    begin
-      if reader.Read(line) then
-      begin
-        item := processore.process(line);
-        chunk.add(item);
-        Inc(index);
-      end
-      else
-        break;
-    end;
-    writer.Write(chunk);
-    FreeAndNil(chunk);
-  end;
-  reader.Close;
-  writer.Close;
-  FConnection.Commit;
-  FConnection := nil;
+  Result := TDecessiProcessor.Create;
 end;
 
 { TDecessiDatabaseIstatDecessiWriter }
 
 function TDecessiDatabaseIstatDecessiWriter.Open: boolean;
-var
-  RS: IZResultSet;
 begin
   Result := inherited Open;
-  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 0 and RDB$RELATION_NAME = ''ISTAT_DECESSI''');
-  while RS.Next do
-  begin
-    FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' INACTIVE');
-  end;
   FStatement := FConnection.PrepareStatement('INSERT INTO ISTAT_DECESSI VALUES(?,?,?,?,? ,?,?,?,?,? ,?,?,?,?,? ,?,?,?)');
-  FConnection.Commit;
 end;
 
 procedure TDecessiDatabaseIstatDecessiWriter.Write(const item: TIstatDecessiRecord);
@@ -232,20 +154,6 @@ begin
     on E: Exception do
       Writeln(E.Message);
   end;
-end;
-
-function TDecessiDatabaseIstatDecessiWriter.Close: boolean;
-var
-  RS: IZResultSet;
-begin
-  FConnection.Commit;
-  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 1 and RDB$RELATION_NAME = ''ISTAT_DECESSI''');
-  while RS.Next do
-  begin
-    FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' ACTIVE');
-  end;
-  FConnection.Commit;
-  Result := inherited Close;
 end;
 
 { TDecessiProcessor }
