@@ -49,7 +49,7 @@ type
   TChunkedPopolazioneDatabaseIstatDecessiWriter = class(TFirebirdChunkedDatabaseWriter<PIstatPopolazioneRecord>)
   protected
     function statement(item: PIstatPopolazioneRecord): rawbytestring; override;
-    function getTableName: string;
+    function getTableName: string; override;
   public
   end;
 
@@ -151,7 +151,7 @@ begin
   begin
     chunk := TBaseChunk<PIstatPopolazioneRecord>.Create;
     index := 0;
-    while index < 256 do
+    while index < 256*100 do
     begin
       if reader.Read(line) then
       begin

@@ -3,9 +3,7 @@ program istat;
 {$mode objfpc}{$H+}
 
 uses
- {$IFDEF UNIX}
-  cthreads,
-         {$ENDIF}
+ {$IFDEF UNIX}cthreads, {$ENDIF}
   Classes,
   SysUtils,
   CustApp,
@@ -13,10 +11,16 @@ uses
   zcore,
   zdbc,
   zparsesql,
-  zplain, istat.batch, istat.batch.decessi, istat.batch.popolazione;
+  zplain,
+  istat.batch,
+  istat.batch.decessi,
+  istat.batch.popolazione;
 
 var
   Application: TIstat;
+
+{$R *.res}
+
 begin
   Application := TIstat.Create(nil);
   Application.Title := 'Istat';

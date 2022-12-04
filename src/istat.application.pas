@@ -32,6 +32,9 @@ type
 
 implementation
 
+uses
+  LCLType;
+
 { TIstat }
 
 function TIstat.prepareConnection: IZConnection;
@@ -50,7 +53,14 @@ begin
   info.AddPair('ForcedWrites', FProperties.getProperty('database.ForcedWrites'));
   info.AddPair('MaxUnflushedWrites', FProperties.getProperty('database.MaxUnflushedWrites'));
   if (not FileExists(databaseLocation)) then
-    info.AddPair('CreateNewDatabase', 'CREATE DATABASE ''' + databaseLocation + ''' USER ''' + FProperties.getProperty('database.username') + ''' PASSWORD ''' + FProperties.getProperty('database.password') + ''' PAGE_SIZE ' + FProperties.getProperty('database.PageSize') + '');
+    info.AddPair('CreateNewDatabase',
+      'CREATE DATABASE ' + QuotedStr(databaseLocation) + // 0
+      ' USER ' + QuotedStr(FProperties.getProperty('database.username')) + // 0
+      ' PASSWORD ' + QuotedStr(FProperties.getProperty('database.password')) + // 0
+      ' PAGE_SIZE ' + QuotedStr(FProperties.getProperty('database.PageSize')) + // 0
+      ' DEFAULT CHARACTER SET ' + QuotedStr('UTF8') + // 0
+      ' COLLATION ' + QuotedStr('UNICODE_CI_AI')
+      ); // 0
   Result := DriverManager.GetConnectionWithParams('zdbc:firebird:/' + databaseLocation, info);
   Result.SetAutoCommit(False);
 end;
@@ -213,6 +223,7 @@ procedure TIstat.LogEvent(Event: TZLoggingEvent);
 begin
   if Event.Category in [lcExecPrepStmt, lcBindPrepStmt] then exit;
   WriteLn(FLogFile, FLoggingFormatter.Format(Event));
+  Flush(FLogFile);
 end;
 
 constructor TIstat.Create(TheOwner: TComponent);

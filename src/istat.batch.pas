@@ -4,8 +4,9 @@ unit istat.batch;
 
 interface
 
+
 uses
-  Classes, SysUtils, ZDbcIntfs, fgl;
+  paxutils, Classes, SysUtils, ZDbcIntfs;
 
 type
   IItemReaderListener = interface
@@ -17,7 +18,7 @@ type
 
   IItemWriterListener = interface
     ['{46CC8B66-9258-4B56-88EA-E808C031BCDD}']
-    procedure writeCount;
+    procedure writeCount(Count: integer = 1);
     function Count: uint64;
     function totalCount: uint64;
   end;
@@ -118,7 +119,7 @@ type
     function Open: boolean; override;
     function Read(var item: string): boolean; override;
     function Close: boolean; override;
-  public
+  published
     property FileName: string read FFileName write SetFileName;
   end;
 
@@ -131,7 +132,7 @@ type
   public
     function Open: boolean; override;
     function Close: boolean; override;
-  public
+  published
     property Connection: IZConnection read FConnection write SetConnection;
   end;
 
@@ -144,7 +145,7 @@ type
   public
     function Open: boolean; override;
     function Close: boolean; override;
-  public
+  published
     property Connection: IZConnection read FConnection write SetConnection;
   end;
 
@@ -153,16 +154,18 @@ type
   TFirebirdChunkedDatabaseWriter<TItemType> = class(TAbstractChunkedDatabaseWriter<TItemType>)
   protected
     function statement(item: TItemType): rawbytestring; virtual; abstract;
-    function getTableName: string;
+    function getTableName: string; virtual; abstract;
+    function ExecuteBlock(Statements: string; Count: integer): IRunnable;
   public
     function Open: boolean; override;
     function Close: boolean; override;
     procedure Write(const items: IChunk<TItemType>); override;
+    property TableName: string read getTableName;
   end;
 
   TBaseChunk<TItemType> = class(TInterfacedObject, IChunk<TItemType>)
   protected
-    fChunk: TFPGList<TItemType>;
+    fChunk: TFPList;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -179,6 +182,18 @@ type
     function Next(var cursor: PChar; separator: char = ','): string;
   public
     function process(const aIntput: string): OutputItem; virtual; abstract;
+  end;
+
+  { TSplitCSVItemProcessor }
+
+  TSplitCSVItemProcessor = class(TStringAbstractItemProcessor<TStringArray>)
+  private
+    FCSVSeparatorChar: char;
+    procedure SetCSVSeparatorChar(AValue: char);
+  public
+    function process(const aIntput: string): TStringArray; override;
+  published
+    property CSVSeparatorChar: char read FCSVSeparatorChar write SetCSVSeparatorChar;
   end;
 
   { TAbstractStep }
@@ -220,9 +235,31 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure writeCount;
+    procedure writeCount(Count: integer = 1);
     function Count: uint64;
     function totalCount: uint64;
+  end;
+
+  { TExecuteStatementRunner }
+
+  TExecuteStatementRunner = class(TInterfacedObject, IRunnable)
+  private
+    FConnection: IZConnection;
+    FCount: integer;
+    FStatement: string;
+    FWriterListerner: IItemWriterListener;
+    procedure SetConnection(AValue: IZConnection);
+    procedure SetCount(AValue: integer);
+    procedure SetStatement(AValue: string);
+    procedure SetWriterListerner(AValue: IItemWriterListener);
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+    procedure run;
+    property Statement: string read FStatement write SetStatement;
+    property TarghetConnection: IZConnection read FConnection write SetConnection;
+    property WriterListerner: IItemWriterListener read FWriterListerner write SetWriterListerner;
+    property Count: integer read FCount write SetCount;
   end;
 
 implementation
@@ -355,9 +392,33 @@ begin
   Result := True;
 end;
 
-function TFirebirdChunkedDatabaseWriter<TItemType>.getTableName: string;
+function TFirebirdChunkedDatabaseWriter<TItemType>.ExecuteBlock(Statements: string; Count: integer): IRunnable;
+var
+  sql: string;
+  runner: TExecuteStatementRunner;
 begin
-
+  runner := TExecuteStatementRunner.Create;
+  runner.TarghetConnection := FConnection;
+  sql := 'execute block' + LineEnding + // 0
+    'as' + LineEnding +// 0
+    '  begin' + LineEnding +//0
+    statements + LineEnding +//0
+    'end;';
+  runner.Statement := sql;
+  runner.Count := Count;
+  runner.WriterListerner := FListener;
+  Result := runner;
+  {
+  try
+    FConnection.CreateStatement.Execute(sql);
+    FListener.writeCount(Count);
+  except
+    On  E: Exception do
+    begin
+      Writeln(E.Message);
+    end;
+  end;
+  }
 end;
 
 function TFirebirdChunkedDatabaseWriter<TItemType>.Open: boolean;
@@ -365,7 +426,7 @@ var
   RS: IZResultSet;
 begin
   Result := inherited Open;
-  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 0 and RDB$RELATION_NAME = ''' + getTableName + '''');
+  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 0 and RDB$RELATION_NAME = ' + QuotedStr(TableName));
   while RS.Next do
   begin
     FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' INACTIVE');
@@ -378,7 +439,7 @@ var
   RS: IZResultSet;
 begin
   Result := inherited Close;
-  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 0 and RDB$RELATION_NAME = ''' + getTableName + '''');
+  RS := FConnection.CreateStatement.ExecuteQuery('SELECT r.RDB$INDEX_NAME FROM RDB$INDICES r WHERE r.RDB$INDEX_INACTIVE = 0 and RDB$RELATION_NAME = ' + QuotedStr(TableName));
   while RS.Next do
   begin
     FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' ACTIVE');
@@ -390,36 +451,49 @@ procedure TFirebirdChunkedDatabaseWriter<TItemType>.Write(const items: IChunk<TI
 var
   sql: string;
   idx: integer;
+  Count: integer;
+  task: TTask;
+const
+  activeTasks: TTaskQueue = nil;
 begin
-  sql := 'execute block' + LineEnding + // 0
-    'as' + LineEnding +// 0
-    '  begin' + LineEnding;
+  if activeTasks = nil then
+  begin
+    activeTasks := TTaskQueue.Create;
+    activeTasks.Semaphore := TSemaphore.Create(5);
+  end;
+  Count := 0;
+  sql := '';
   for idx := 0 to items.Count - 1 do
   begin
     sql += '    ' + statement(items.get(idx)) + LineEnding;
-    FListener.writeCount;
-  end;
-  // 0
-  sql += '  end' + LineEnding +// 0
-    ';';
-  try
-    if FConnection.CreateStatement.Execute(sql) then
+    Count += 1;
+    if Count = 256 then
     begin
-      FConnection.Commit;
-    end;
-  except
-    On  E: Exception do
-    begin
-      Writeln(E.Message);
+      task := TTask.Create();
+      task.runner := ExecuteBlock(sql, Count);
+      activeTasks.add(task);
+      Count := 0;
+      sql := '';
+      activeTasks.Start;
     end;
   end;
+  if Count > 0 then
+  begin
+    task := TTask.Create();
+    task.runner := ExecuteBlock(sql, Count);
+    activeTasks.add(task);
+  end;
+  while activeTasks.workingCount > 0 do
+    Sleep(10);
+  activeTasks.Stop;
+  FreeAndNil(activeTasks);
+  //FConnection.Commit;
 end;
-
 
 procedure TBaseChunk<TItemType>.AfterConstruction;
 begin
   inherited AfterConstruction;
-  fChunk := TFPGList<TItemType>.Create;
+  fChunk := TFPList.Create;
 end;
 
 procedure TBaseChunk<TItemType>.BeforeDestruction;
@@ -443,6 +517,80 @@ begin
   Result := fChunk[index];
 end;
 
+{ TSplitCSVItemProcessor }
+
+procedure TSplitCSVItemProcessor.SetCSVSeparatorChar(AValue: char);
+begin
+  if FCSVSeparatorChar = AValue then Exit;
+  FCSVSeparatorChar := AValue;
+end;
+
+function TSplitCSVItemProcessor.process(const aIntput: string): TStringArray;
+var
+  cursor: PChar;
+begin
+  cursor := PChar(aIntput);
+  SetLength(Result, 0);
+  while cursor^ <> #0 do
+  begin
+    SetLength(Result, Length(Result) + 1);
+    Result[High(Result)] := Next(cursor, FCSVSeparatorChar);
+  end;
+end;
+
+{ TExecuteStatementRunner }
+
+procedure TExecuteStatementRunner.SetConnection(AValue: IZConnection);
+begin
+  if FConnection = AValue then Exit;
+  FConnection := AValue;
+end;
+
+procedure TExecuteStatementRunner.SetCount(AValue: integer);
+begin
+  if FCount = AValue then Exit;
+  FCount := AValue;
+end;
+
+procedure TExecuteStatementRunner.SetStatement(AValue: string);
+begin
+  if FStatement = AValue then Exit;
+  FStatement := AValue;
+end;
+
+procedure TExecuteStatementRunner.SetWriterListerner(AValue: IItemWriterListener);
+begin
+  FWriterListerner := AValue;
+end;
+
+procedure TExecuteStatementRunner.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  FCount := 1;
+end;
+
+procedure TExecuteStatementRunner.BeforeDestruction;
+begin
+  FConnection := nil;
+  FStatement := '';
+  FWriterListerner := nil;
+  inherited BeforeDestruction;
+end;
+
+procedure TExecuteStatementRunner.run;
+begin
+  try
+    FConnection.CreateStatement.Execute(FStatement);
+    if FWriterListerner <> nil then
+      FWriterListerner.writeCount(FCount);
+  except
+    On  E: Exception do
+    begin
+      Writeln(E.Message);
+    end;
+  end;
+end;
+
 { TItemWriterListener }
 
 constructor TItemWriterListener.Create;
@@ -456,15 +604,14 @@ begin
   inherited Destroy;
 end;
 
-procedure TItemWriterListener.writeCount;
+procedure TItemWriterListener.writeCount(Count: integer);
 begin
   try
     EnterCriticalSection(fLock);
-    fCount += 1;
+    fCount += Count;
   finally
     LeaveCriticalSection(fLock);
   end;
-
 end;
 
 function TItemWriterListener.Count: uint64;

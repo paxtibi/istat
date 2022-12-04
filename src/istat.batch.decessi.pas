@@ -59,13 +59,12 @@ type
     function Close: boolean; override;
   end;
 
-
   { TChunkedDecessiDatabaseIstatDecessiWriter }
 
   TChunkedDecessiDatabaseIstatDecessiWriter = class(TFirebirdChunkedDatabaseWriter<PIstatDecessiRecord>)
   protected
     function statement(item: PIstatDecessiRecord): rawbytestring; override;
-    function getTableName: string;
+    function getTableName: string; override;
   end;
 
   { TDecessiRunner }
@@ -166,7 +165,7 @@ begin
   begin
     chunk := TBaseChunk<PIstatDecessiRecord>.Create;
     index := 0;
-    while index < 256 do
+    while index < 256*100 do
     begin
       if reader.Read(line) then
       begin
