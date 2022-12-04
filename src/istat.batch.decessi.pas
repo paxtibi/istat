@@ -44,42 +44,43 @@ type
 
   { TDecessiProcessor }
 
-  TDecessiProcessor = class(TStringAbstractItemProcessor<PIstatDecessiRecord>)
-    function process(const aIntput: string): PIstatDecessiRecord; override;
+  TDecessiProcessor = class(TStringAbstractItemProcessor<TIstatDecessiRecord>)
+    function process(const aIntput: string): TIstatDecessiRecord; override;
   end;
 
-  { TDecessiDatabaseIstatDecessiWriter }
+  { TDecessiDatabaseIstatWriter }
 
-  TDecessiDatabaseIstatDecessiWriter = class(TFirebirdDatabaseWriter<TIstatDecessiRecord>)
+  TDecessiDatabaseIstatWriter = class(TFirebirdDatabaseWriter<TIstatDecessiRecord>)
   public
+    procedure AfterConstruction; override;
     function Open: boolean; override;
     procedure Write(const item: TIstatDecessiRecord); override;
   end;
 
   { TChunkedDecessiDatabaseIstatDecessiWriter }
 
-  TChunkedDecessiDatabaseIstatDecessiWriter = class(TFirebirdChunkedDatabaseWriter<PIstatDecessiRecord>)
+  TChunkedDecessiDatabaseIstatDecessiWriter = class(TFirebirdChunkedDatabaseWriter<TIstatDecessiRecord>)
   protected
-    function statement(item: PIstatDecessiRecord): rawbytestring; override;
+    function statement(item: TIstatDecessiRecord): rawbytestring; override;
     function getTableName: string; override;
   end;
 
   { TDecessiRunner }
 
-  TDecessiRunner = class(TFirebirdStepRunner<PIstatDecessiRecord>)
+  TDecessiRunner = class(TFirebirdStepRunner<TIstatDecessiRecord>)
   protected
     function getReaderDecessi: IStringReader; override;
-    function getWriterDecessi: IChunkItemWriter<PIstatDecessiRecord>; override;
-    function getProcessor: IStringProcessor<PIstatDecessiRecord>; override;
+    function getWriterDecessi: IItemWriter<TIstatDecessiRecord>; override;
+    function getProcessor: IStringProcessor<TIstatDecessiRecord>; override;
   end;
 
 implementation
 
 { TChunkedDecessiDatabaseIstatDecessiWriter }
 
-function TChunkedDecessiDatabaseIstatDecessiWriter.statement(item: PIstatDecessiRecord): rawbytestring;
+function TChunkedDecessiDatabaseIstatDecessiWriter.statement(item: TIstatDecessiRecord): rawbytestring;
 begin
-  with item^ do
+  with item do
     Result := Format('INSERT INTO ISTAT_DECESSI VALUES(%s,%s,%s,%s,%s, %s,%s,%s,%s,%s, %s,%s,%s,%s,%s, %s,%s,%s,%s,%s, %s,%s,%s,%s,%s ,%s,%s,%s,%s);', [QuotedStr(ITTER107), QuotedStr(Territorio), QuotedStr(TIPO_DATO15), QuotedStr(Tipo_dato), QuotedStr(ETA1_A), QuotedStr(Eta), QuotedStr(SEXISTAT1), QuotedStr(Sesso), QuotedStr(STATCIV2), QuotedStr(Stato_civile), QuotedStr(TITOLO_STUDIO), QuotedStr(Istruzione), QuotedStr(T_BIS_A), QuotedStr(Mese_di_decesso), QuotedStr(T_BIS_B), QuotedStr(Anno_di_nascita), QuotedStr(ETA1_B), QuotedStr(Classe_di_eta_coniuge_superstite), QuotedStr(T_BIS_C), QuotedStr(Anno_di_matrimonio), QuotedStr(ISO), QuotedStr(Paese_di_cittadinanza), QuotedStr(CAUSEMORTE_SL), QuotedStr(Causa_iniziale_di_morte), QuotedStr(TIME), QuotedStr(Seleziona_periodo), QuotedStr(Value), QuotedStr(Flag_Codes), QuotedStr(Flags)]);
 end;
 
@@ -100,52 +101,72 @@ begin
   Result := reader;
 end;
 
-function TDecessiRunner.getWriterDecessi: IChunkItemWriter<PIstatDecessiRecord>;
+function TDecessiRunner.getWriterDecessi: IItemWriter<TIstatDecessiRecord>;
 var
-  writer: TChunkedDecessiDatabaseIstatDecessiWriter;
+  writer: TDecessiDatabaseIstatWriter;
 begin
-  writer := TChunkedDecessiDatabaseIstatDecessiWriter.Create;
+  writer := TDecessiDatabaseIstatWriter.Create;
   writer.setListener(FWriterListener);
   writer.Connection := FConnection;
   Result := writer;
 end;
 
-function TDecessiRunner.getProcessor: IStringProcessor<PIstatDecessiRecord>;
+function TDecessiRunner.getProcessor: IStringProcessor<TIstatDecessiRecord>;
 begin
   Result := TDecessiProcessor.Create;
 end;
 
-{ TDecessiDatabaseIstatDecessiWriter }
+{ TDecessiDatabaseIstatWriter }
 
-function TDecessiDatabaseIstatDecessiWriter.Open: boolean;
+procedure TDecessiDatabaseIstatWriter.AfterConstruction;
 begin
-  Result := inherited Open;
-  FStatement := FConnection.PrepareStatement('INSERT INTO ISTAT_DECESSI VALUES(?,?,?,?,? ,?,?,?,?,? ,?,?,?,?,? ,?,?,?)');
+  inherited AfterConstruction;
+  FTableName := 'ISTAT_DECESSI';
 end;
 
-procedure TDecessiDatabaseIstatDecessiWriter.Write(const item: TIstatDecessiRecord);
+function TDecessiDatabaseIstatWriter.Open: boolean;
+begin
+  Result := inherited Open;
+  FStatement := FConnection.PrepareStatement('INSERT INTO ISTAT_DECESSI VALUES(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,? ,?,?,?,?)');
+end;
+
+procedure TDecessiDatabaseIstatWriter.Write(const item: TIstatDecessiRecord);
 begin
   try
     with item do
     begin
-      FStatement.SetString(1, ITTER107);
-      FStatement.SetUnicodeString(2, Territorio);
-      FStatement.SetString(3, TIPO_DATO15);
-      FStatement.SetString(4, ETA1_A);
-      FStatement.SetString(5, SEXISTAT1);
-      FStatement.SetString(6, STATCIV2);
-      FStatement.SetString(7, TITOLO_STUDIO);
-      FStatement.SetString(8, T_BIS_A);
-      FStatement.SetString(9, T_BIS_B);
-      FStatement.SetString(10, Anno_di_nascita);
-      FStatement.SetString(11, ETA1_B);
-      FStatement.SetString(12, T_BIS_C);
-      FStatement.SetString(13, Anno_di_matrimonio);
-      FStatement.SetString(14, ISO);
-      FStatement.SetString(15, CAUSEMORTE_SL);
-      FStatement.SetString(16, TIME);
-      FStatement.SetInt(17, StrToInt(Value));
-      FStatement.SetString(18, Flag_Codes);
+      FStatement.SetString(01, ITTER107);
+      FStatement.SetUnicodeString(02, Territorio);
+      FStatement.SetString(03, TIPO_DATO15);
+      FStatement.SetString(04, Tipo_dato);
+      FStatement.SetString(05, ETA1_A);
+      FStatement.SetString(06, Eta);
+      FStatement.SetString(07, SEXISTAT1);
+      FStatement.SetString(08, Sesso);
+      FStatement.SetString(09, STATCIV2);
+      FStatement.SetString(10, Stato_civile);
+      FStatement.SetString(11, TITOLO_STUDIO);
+      FStatement.SetString(12, Istruzione);
+      FStatement.SetString(13, T_BIS_A);
+      FStatement.SetString(14, Mese_di_decesso);
+      FStatement.SetString(15, T_BIS_B);
+      FStatement.SetString(16, Anno_di_nascita);
+      FStatement.SetString(17, ETA1_B);
+      FStatement.SetString(18, Classe_di_eta_coniuge_superstite);
+      FStatement.SetString(19, T_BIS_C);
+      FStatement.SetString(20, Anno_di_matrimonio);
+      FStatement.SetString(21, ISO);
+      FStatement.SetString(22, Paese_di_cittadinanza);
+      FStatement.SetString(23, CAUSEMORTE_SL);
+      FStatement.SetString(24, Causa_iniziale_di_morte);
+      FStatement.SetString(25, TIME);
+      FStatement.SetString(26, Seleziona_periodo);
+      if Value = '' then
+        FStatement.SetNull(27, stInteger)
+      else
+        FStatement.SetInt(27, StrToInt(Value));
+      FStatement.SetString(28, Flag_Codes);
+      FStatement.SetString(29, Flags);
     end;
     FStatement.ExecutePrepared;
     if (FListener <> nil) then
@@ -158,13 +179,12 @@ end;
 
 { TDecessiProcessor }
 
-function TDecessiProcessor.process(const aIntput: string): PIstatDecessiRecord;
+function TDecessiProcessor.process(const aIntput: string): TIstatDecessiRecord;
 var
   cursor: PChar;
 begin
   cursor := PChar(aIntput);
-  New(Result);
-  with Result^ do
+  with Result do
   begin
     ITTER107 := Next(Cursor, '|');
     Territorio := Next(Cursor, '|');

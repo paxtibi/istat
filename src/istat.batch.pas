@@ -34,7 +34,6 @@ type
   IStringReader = interface(IItemReader<string>)
   end;
 
-
   IItemWriter<TItemType> = interface
     ['{E7FC1E44-7907-421C-8403-B5333714CEC2}']
     function Open: boolean;
@@ -273,7 +272,7 @@ type
     procedure SetChunkSize(AValue: integer);
   protected
     function getReaderDecessi: IStringReader; virtual; abstract;
-    function getWriterDecessi: IChunkItemWriter<TItemType>; virtual; abstract;
+    function getWriterDecessi: IItemWriter<TItemType>; virtual; abstract;
     function getProcessor: IStringProcessor<TItemType>; virtual; abstract;
   public
     constructor Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
@@ -474,11 +473,10 @@ procedure TStepRunner<TItemType>.run;
 var
   reader: IItemReader<string>;
   processore: IItemProcessor<string, TItemType>;
-  writer: IChunkItemWriter<TItemType>;
+  writer: IItemWriter<TItemType>;
   item: TItemType;
   line: string = '';
   startTime: uint64 = 0;
-  chunk: TBaseChunk<TItemType>;
   index: integer;
   done: boolean = False;
 begin
@@ -492,14 +490,13 @@ begin
   done := False;
   while not done do
   begin
-    chunk := TBaseChunk<TItemType>.Create;
     index := 0;
     while index < FChunkSize do
     begin
       if reader.Read(line) then
       begin
         item := processore.process(line);
-        chunk.add(item);
+        writer.Write(item);
         Inc(index);
       end
       else
@@ -508,8 +505,6 @@ begin
         break;
       end;
     end;
-    writer.Write(chunk);
-    FreeAndNil(chunk);
   end;
   reader.Close;
   writer.Close;

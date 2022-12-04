@@ -29,43 +29,44 @@ type
 
   { TPopolazioneProcessor }
 
-  TPopolazioneProcessor = class(TStringAbstractItemProcessor<PIstatPopolazioneRecord>, IStringProcessor<PIstatPopolazioneRecord>)
-    function process(const aIntput: string): PIstatPopolazioneRecord; override;
+  TPopolazioneProcessor = class(TStringAbstractItemProcessor<TIstatPopolazioneRecord>, IStringProcessor<TIstatPopolazioneRecord>)
+    function process(const aIntput: string): TIstatPopolazioneRecord; override;
   end;
 
   { TPopolazioneDatabaseIstatDecessiWriter }
 
   TPopolazioneDatabaseIstatDecessiWriter = class(TFirebirdDatabaseWriter<TIstatPopolazioneRecord>)
   public
+    procedure AfterConstruction; override;
     function Open: boolean; override;
     procedure Write(const item: TIstatPopolazioneRecord); override;
   end;
 
   { TChunkedPopolazioneDatabaseIstatDecessiWriter }
 
-  TChunkedPopolazioneDatabaseIstatDecessiWriter = class(TFirebirdChunkedDatabaseWriter<PIstatPopolazioneRecord>)
+  TChunkedPopolazioneDatabaseIstatDecessiWriter = class(TFirebirdChunkedDatabaseWriter<TIstatPopolazioneRecord>)
   protected
-    function statement(item: PIstatPopolazioneRecord): rawbytestring; override;
+    function statement(item: TIstatPopolazioneRecord): rawbytestring; override;
     function getTableName: string; override;
   public
   end;
 
   { TPopolazioneRunner }
 
-  TPopolazioneRunner = class(TFirebirdStepRunner<PIstatPopolazioneRecord>)
+  TPopolazioneRunner = class(TFirebirdStepRunner<TIstatPopolazioneRecord>)
   protected
     function getReaderDecessi: IStringReader; override;
-    function getWriterDecessi: IChunkItemWriter<PIstatPopolazioneRecord>; override;
-    function getProcessor: IStringProcessor<PIstatPopolazioneRecord>; override;
+    function getWriterDecessi: IItemWriter<TIstatPopolazioneRecord>; override;
+    function getProcessor: IStringProcessor<TIstatPopolazioneRecord>; override;
   end;
 
 implementation
 
 { TChunkedPopolazioneDatabaseIstatDecessiWriter }
 
-function TChunkedPopolazioneDatabaseIstatDecessiWriter.statement(item: PIstatPopolazioneRecord): rawbytestring;
+function TChunkedPopolazioneDatabaseIstatDecessiWriter.statement(item: TIstatPopolazioneRecord): rawbytestring;
 begin
-  with item^ do
+  with item do
   begin
     Result := Format('INSERT INTO ISTAT_POPOLAZIONE VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);', [QuotedStr(ITTER107), QuotedStr(Territorio), QuotedStr(TIPO_DATO15), QuotedStr(Tipo_di_indicatore_demografico), QuotedStr(SEXISTAT1), QuotedStr(Sesso), QuotedStr(ETA1), QuotedStr(Eta), QuotedStr(STATCIV2), QuotedStr(Stato_civile), QuotedStr(TIME), QuotedStr(Seleziona_periodo), QuotedStr(Value), QuotedStr(Flag_Codes), QuotedStr(Flags)]);
   end;
@@ -86,22 +87,28 @@ begin
   Result := reader;
 end;
 
-function TPopolazioneRunner.getWriterDecessi: IChunkItemWriter<PIstatPopolazioneRecord>;
+function TPopolazioneRunner.getWriterDecessi: IItemWriter<TIstatPopolazioneRecord>;
 var
-  writer: TChunkedPopolazioneDatabaseIstatDecessiWriter;
+  writer: TPopolazioneDatabaseIstatDecessiWriter;
 begin
-  writer := TChunkedPopolazioneDatabaseIstatDecessiWriter.Create;
+  writer := TPopolazioneDatabaseIstatDecessiWriter.Create;
   writer.Connection := FConnection;
   writer.setListener(FWriterListener);
   Result := writer;
 end;
 
-function TPopolazioneRunner.getProcessor: IStringProcessor<PIstatPopolazioneRecord>;
+function TPopolazioneRunner.getProcessor: IStringProcessor<TIstatPopolazioneRecord>;
 begin
   Result := TPopolazioneProcessor.Create;
 end;
 
 { TPopolazioneDatabaseIstatDecessiWriter }
+
+procedure TPopolazioneDatabaseIstatDecessiWriter.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  FTableName := 'ISTAT_POPOLAZIONE';
+end;
 
 function TPopolazioneDatabaseIstatDecessiWriter.Open: boolean;
 begin
@@ -145,13 +152,12 @@ end;
 
 { TPopolazioneProcessor }
 
-function TPopolazioneProcessor.process(const aIntput: string): PIstatPopolazioneRecord;
+function TPopolazioneProcessor.process(const aIntput: string): TIstatPopolazioneRecord;
 var
   cursor: PChar;
 begin
   cursor := PChar(aIntput);
-  New(Result);
-  with Result^ do
+  with Result do
   begin
     ITTER107 := Next(Cursor, '|');
     Territorio := Next(Cursor, '|');

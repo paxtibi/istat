@@ -9,7 +9,6 @@ uses
 
 type
   { TFirebirdChunkedDatabaseWriter }
-
   TFirebirdChunkedDatabaseWriter<TItemType> = class(TAbstractChunkedDatabaseWriter<TItemType>)
   protected
     function statement(item: TItemType): rawbytestring; virtual; abstract;
@@ -23,19 +22,20 @@ type
   end;
 
   { TFirebirdDatabaseWriter }
-
   TFirebirdDatabaseWriter<TItemType> = class(TAbstractDatabaseWriter<TItemType>)
+  private
+    FTableName: string;
+    procedure SetTableName(AValue: string);
   protected
     FStatement: IZPreparedStatement;
     function GetTableName: string; virtual; abstract;
   public
     function Open: boolean; override;
     function Close: boolean; override;
-    property TableName: string read GetTableName;
+    property TableName: string read FTableName write SetTableName;
   end;
 
   { TFirebirdStepRunner }
-
   TFirebirdStepRunner<TItemType> = class(TStepRunner<TItemType>, IRunnable)
   public
     constructor Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
@@ -49,7 +49,7 @@ implementation
 constructor TFirebirdStepRunner<TItemType>.Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
 begin
   inherited Create(aFileName, aConnection, aReaderListener, aWriterListener);
-  FChunkSize := 256 * 20;
+  FChunkSize := 256 * 10000;
 end;
 
 { TFirebirdChunkedDatabaseWriter }
@@ -120,7 +120,6 @@ begin
   begin
     p := items.Delete(idx);
     sql += '    ' + statement(p) + LineEnding;
-    Dispose(p);
     Count += 1;
     if Count = 256 then
     begin
@@ -146,6 +145,12 @@ begin
 end;
 
 { TFirebirdDatabaseWriter }
+
+procedure TFirebirdDatabaseWriter<TItemType>.SetTableName(AValue: string);
+begin
+  if FTableName = AValue then Exit;
+  FTableName := AValue;
+end;
 
 function TFirebirdDatabaseWriter<TItemType>.Open: boolean;
 var

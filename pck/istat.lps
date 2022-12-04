@@ -10,42 +10,43 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="1"/>
         <CursorPos X="44" Y="12"/>
-        <UsageCount Value="192"/>
+        <UsageCount Value="195"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.application.pas"/>
         <IsPartOfProject Value="True"/>
-        <TopLine Value="227"/>
-        <CursorPos X="31" Y="250"/>
-        <UsageCount Value="192"/>
+        <TopLine Value="71"/>
+        <CursorPos X="44" Y="146"/>
+        <UsageCount Value="195"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.batch.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="483"/>
-        <CursorPos X="3" Y="485"/>
-        <UsageCount Value="192"/>
+        <TopLine Value="202"/>
+        <CursorPos X="19" Y="98"/>
+        <UsageCount Value="195"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.batch.decessi.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="6"/>
-        <TopLine Value="143"/>
-        <CursorPos Y="159"/>
-        <UsageCount Value="192"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="146"/>
+        <CursorPos X="73" Y="169"/>
+        <UsageCount Value="195"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.batch.popolazione.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="5"/>
-        <TopLine Value="39"/>
-        <CursorPos X="3" Y="55"/>
-        <UsageCount Value="192"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="116"/>
+        <CursorPos Y="135"/>
+        <UsageCount Value="195"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -53,17 +54,16 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="16"/>
-        <UsageCount Value="44"/>
+        <UsageCount Value="47"/>
         <DefaultSyntaxHighlighter Value="None"/>
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.batch.firebird.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="3"/>
-        <TopLine Value="49"/>
-        <CursorPos X="43" Y="73"/>
-        <UsageCount Value="22"/>
+        <TopLine Value="74"/>
+        <CursorPos X="70" Y="82"/>
+        <UsageCount Value="25"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -84,20 +84,19 @@
         <UsageCount Value="3"/>
       </Unit>
       <Unit>
-        <Filename Value="d:\fpcupdeluxe\config_lazarus\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcInterbase6Utils.pas"/>
+        <Filename Value="D:\fpcupdeluxe\config_lazarus\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcInterbase6Utils.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="887"/>
-        <CursorPos X="63" Y="905"/>
+        <CursorPos Y="902"/>
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="501"/>
-        <CursorPos X="31" Y="516"/>
-        <UsageCount Value="42"/>
-        <Loaded Value="True"/>
+        <CursorPos X="53" Y="511"/>
+        <UsageCount Value="43"/>
       </Unit>
       <Unit>
         <Filename Value="D:\fpcupdeluxe\config_lazarus\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcLogging.pas"/>
@@ -146,9 +145,9 @@
       <Unit>
         <Filename Value="D:\fpcupdeluxe\config_lazarus\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcStatement.pas"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="1582"/>
-        <CursorPos Y="1600"/>
-        <UsageCount Value="9"/>
+        <TopLine Value="2434"/>
+        <CursorPos Y="2450"/>
+        <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
@@ -189,127 +188,135 @@
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
+      <Unit>
+        <Filename Value="D:\fpcupdeluxe\config_lazarus\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcInterbase6Statement.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="393"/>
+        <CursorPos Y="410"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
       <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="545" Column="33" TopLine="523"/>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="64" Column="19" TopLine="40"/>
       </Position>
       <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="141" TopLine="126"/>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="84" Column="146" TopLine="81"/>
       </Position>
       <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="140" TopLine="126"/>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="56" Column="17" TopLine="48"/>
       </Position>
       <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="141" TopLine="126"/>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="130" Column="113" TopLine="127"/>
       </Position>
       <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="140" TopLine="126"/>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="134" Column="87" TopLine="124"/>
       </Position>
       <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="143" Column="24" TopLine="127"/>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="157" TopLine="146"/>
       </Position>
       <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="527" TopLine="521"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="141" Column="19" TopLine="126"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="527" TopLine="521"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="528" TopLine="521"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="527" TopLine="521"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="528" TopLine="521"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="527" TopLine="521"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="528" TopLine="521"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="527" TopLine="521"/>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="138" TopLine="135"/>
       </Position>
       <Position>
         <Filename Value="..\src\istat.application.pas"/>
-        <Caret Line="26" Column="18" TopLine="9"/>
+        <Caret Line="167" Column="34" TopLine="143"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.firebird.pas"/>
+        <Caret Line="169" Column="27" TopLine="154"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.pas"/>
+        <Caret Line="279" Column="19" TopLine="256"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.popolazione.pas"/>
+        <Caret Line="118" Column="69" TopLine="107"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.popolazione.pas"/>
+        <Caret Line="13" Column="55"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.popolazione.pas"/>
+        <Caret Line="33" Column="69" TopLine="17"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.popolazione.pas"/>
+        <Caret Line="38" Column="97" TopLine="26"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.popolazione.pas"/>
+        <Caret Line="69" Column="12" TopLine="51"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.firebird.pas"/>
+        <Caret Line="107" Column="25" TopLine="98"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.pas"/>
+        <Caret Line="500" TopLine="482"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.popolazione.pas"/>
+        <Caret Line="100" Column="83" TopLine="74"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.popolazione.pas"/>
+        <Caret Line="121" Column="64" TopLine="105"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="127" Column="58" TopLine="111"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="74" Column="64" TopLine="52"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="83" Column="12" TopLine="65"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="114" Column="75" TopLine="88"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="136" Column="14" TopLine="117"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.firebird.pas"/>
+        <Caret Line="115" Column="68" TopLine="95"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.pas"/>
+        <Caret Line="494" Column="48" TopLine="482"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.firebird.pas"/>
+        <Caret Line="33" Column="15" TopLine="10"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.firebird.pas"/>
+        <Caret Line="164" TopLine="150"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.firebird.pas"/>
+        <Caret Line="18" Column="14" TopLine="17"/>
       </Position>
       <Position>
         <Filename Value="..\src\istat.application.pas"/>
-        <Caret Line="250" Column="31" TopLine="227"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="130" Column="32" TopLine="105"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="138" Column="15" TopLine="122"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="488" TopLine="484"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="139" Column="43" TopLine="122"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="489" Column="21" TopLine="486"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="140" Column="15" TopLine="123"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="498" Column="17" TopLine="492"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <Caret Line="142" Column="24" TopLine="124"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="96" Column="31" TopLine="86"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="41" Column="14" TopLine="19"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="69" Column="51" TopLine="49"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="67" Column="44" TopLine="49"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.firebird.pas"/>
-        <Caret Line="41" Column="14" TopLine="17"/>
+        <Caret Line="25" Column="21" TopLine="7"/>
       </Position>
     </JumpHistory>
     <RunParams>
@@ -324,7 +331,7 @@
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="..\src\istat.application.pas"/>
-        <Line Value="253"/>
+        <Line Value="264"/>
       </Item>
     </BreakPoints>
     <Watches>

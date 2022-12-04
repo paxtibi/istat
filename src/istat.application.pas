@@ -209,6 +209,17 @@ begin
       WriteLn(e.Message);
     end;
   end;
+  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_1');
+  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_2');
+  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_3');
+  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_4');
+
+
+  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_1');
+  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_2');
+  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_3');
+  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_4');
+  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_5');
 
   Connection.CreateStatement.Execute('INSERT INTO ISTAT_POPOLAZIONE_ITALIANA SELECT * FROM ISTAT_POPOLAZIONE WHERE ITTER107=''IT''');
 end;
