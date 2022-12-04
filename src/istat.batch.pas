@@ -474,9 +474,9 @@ begin
       activeTasks.add(task);
       Count := 0;
       sql := '';
-      activeTasks.Start;
     end;
   end;
+  activeTasks.Start;
   if Count > 0 then
   begin
     task := TTask.Create();

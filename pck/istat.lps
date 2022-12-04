@@ -10,33 +10,33 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="48" Y="16"/>
-        <UsageCount Value="178"/>
+        <UsageCount Value="179"/>
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.application.pas"/>
         <IsPartOfProject Value="True"/>
         <TopLine Value="181"/>
         <CursorPos Y="194"/>
-        <UsageCount Value="178"/>
+        <UsageCount Value="179"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.batch.pas"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
         <TopLine Value="464"/>
-        <CursorPos X="20" Y="488"/>
-        <UsageCount Value="178"/>
+        <CursorPos X="23" Y="481"/>
+        <UsageCount Value="179"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.batch.decessi.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="5"/>
         <TopLine Value="156"/>
         <CursorPos X="24" Y="168"/>
-        <UsageCount Value="178"/>
+        <UsageCount Value="179"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -45,7 +45,7 @@
         <EditorIndex Value="1"/>
         <TopLine Value="147"/>
         <CursorPos X="26" Y="154"/>
-        <UsageCount Value="178"/>
+        <UsageCount Value="179"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -53,7 +53,7 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="16"/>
-        <UsageCount Value="30"/>
+        <UsageCount Value="31"/>
         <DefaultSyntaxHighlighter Value="None"/>
       </Unit>
       <Unit>
@@ -83,10 +83,11 @@
       </Unit>
       <Unit>
         <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="102"/>
-        <CursorPos X="36" Y="121"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="475"/>
+        <CursorPos X="21" Y="491"/>
         <UsageCount Value="37"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="D:\fpcupdeluxe\config_lazarus\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcLogging.pas"/>
@@ -126,7 +127,7 @@
       </Unit>
       <Unit>
         <Filename Value="..\src\istat.xml"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="4"/>
         <CursorPos X="32" Y="3"/>
         <UsageCount Value="14"/>
         <Loaded Value="True"/>
@@ -150,18 +151,6 @@
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="158" Column="13" TopLine="138"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="397" Column="3" TopLine="382"/>
-      </Position>
-      <Position>
-        <Filename Value="..\src\istat.batch.pas"/>
-        <Caret Line="162" Column="14" TopLine="142"/>
-      </Position>
       <Position>
         <Filename Value="..\src\istat.batch.pas"/>
         <Caret Line="457" Column="31" TopLine="437"/>
@@ -269,6 +258,18 @@
         <Filename Value="..\src\istat.batch.pas"/>
         <Caret Line="162" Column="18" TopLine="145"/>
       </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.decessi.pas"/>
+        <Caret Line="168" Column="24" TopLine="156"/>
+      </Position>
+      <Position>
+        <Filename Value="..\src\istat.batch.pas"/>
+        <Caret Line="488" TopLine="464"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\packages\paxutils\src\paxutils.pas"/>
+        <Caret Line="491" Column="21" TopLine="475"/>
+      </Position>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
@@ -276,15 +277,6 @@
     </RunParams>
   </ProjectSession>
   <Debugging>
-    <BreakPoints>
-      <Item>
-        <Kind Value="bpkSource"/>
-        <WatchScope Value="wpsLocal"/>
-        <WatchKind Value="wpkWrite"/>
-        <Source Value="..\src\istat.batch.pas"/>
-        <Line Value="488"/>
-      </Item>
-    </BreakPoints>
     <Watches>
       <Item>
         <Expression Value="Result"/>
