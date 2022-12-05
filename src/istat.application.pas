@@ -1,6 +1,8 @@
 unit istat.application;
 
 {$mode delphi}{$H+}
+{$ModeSwitch typehelpers}
+{$ModeSwitch advancedrecords}
 interface
 
 uses
@@ -31,10 +33,41 @@ type
     destructor Destroy; override;
   end;
 
+type
+  TTimer = uint64;
+
+  { TTimerHelper }
+
+  TTimerHelper = type helper for TTimer
+    procedure restart;
+    function elapsed: TTimer;
+    function toString: string;
+  end;
+
+
 implementation
 
 uses
   LCLType;
+
+
+{ TTimerHelper }
+
+procedure TTimerHelper.restart;
+begin
+  self := millis;
+end;
+
+function TTimerHelper.elapsed: TTimer;
+begin
+  Result := millis - Self;
+end;
+
+function TTimerHelper.toString: string;
+begin
+  Result := millisToString(elapsed);
+end;
+
 
 { TIstat }
 
@@ -184,8 +217,10 @@ end;
 procedure TIstat.terminaAttivita;
 var
   connection: IZConnection;
+  timer: TTimer=0;
 begin
   connection := getConnectionDML;
+  timer.restart;
   try
     connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_1 ON ISTAT_DECESSI (CAUSEMORTE_SL);');
     connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_2 ON ISTAT_DECESSI (ANNO);');
@@ -214,14 +249,17 @@ begin
   Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_3');
   Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_4');
 
-
   Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_1');
   Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_2');
   Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_3');
   Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_4');
   Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_5');
-
-  Connection.CreateStatement.Execute('INSERT INTO ISTAT_POPOLAZIONE_ITALIANA SELECT * FROM ISTAT_POPOLAZIONE WHERE ITTER107=''IT''');
+  Connection.Commit;
+  WriteLn('Creazione indici in ', timer.ToString);
+  timer.restart;
+  Connection.CreateStatement.Execute('INSERT INTO ISTAT_POPOLAZIONE_ITALIANA SELECT * FROM ISTAT_POPOLAZIONE WHERE ITTER107=''IT'' and SEXISTAT1=9 and STATCIV2=99');
+  Connection.Commit;
+  WriteLn('Tabella POPOLAZIONE ITALIANA riversata ', timer.ToString);
 end;
 
 
@@ -254,16 +292,16 @@ begin
   activeTasks.Start;
   while activeTasks.workingCount > 0 do
   begin
-    if millis() - lastMillis > 1000 then
+    if millis() - lastMillis > 1000*60 then
     begin
-      Writeln(Format('Active Threads: %d - Read: %10n -> Write: %10n in %s', [activeTasks.workingCount, FReadListener.Count * 1.0, FWriteListener.Count * 1.0, millisToString(millis() - lastMillis)], DefaultFormatSettings));
+      Writeln(Format('Active Threads: %d - Read: %15n -> Write: %15n in %s', [activeTasks.workingCount, FReadListener.Count * 1.0, FWriteListener.Count * 1.0, millisToString(millis() - lastMillis)], DefaultFormatSettings));
       lastMillis := millis();
     end;
   end;
   activeTasks.Stop;
   activeTasks.Terminate;
 
-  Writeln(Format('Total Read : %10n -> Write : %10n in %s', [FReadListener.totalCount * 1.0, FWriteListener.totalCount * 1.0, millisToString(millis() - globalTime)], DefaultFormatSettings));
+  Writeln(Format('Total Read : %15n -> Write : %15n in %s', [FReadListener.totalCount * 1.0, FWriteListener.totalCount * 1.0, millisToString(millis() - globalTime)], DefaultFormatSettings));
   terminaAttivita;
   Terminate;
 end;

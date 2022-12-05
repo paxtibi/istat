@@ -264,12 +264,10 @@ type
 
   TStepRunner<TItemType> = class(TInterfacedObject, IRunnable)
   protected
-    FChunkSize: integer;
     FConnection: IZConnection;
     FFileName: string;
     FReaderListener: IItemReaderListener;
     FWriterListener: IItemWriterListener;
-    procedure SetChunkSize(AValue: integer);
   protected
     function getReaderDecessi: IStringReader; virtual; abstract;
     function getWriterDecessi: IItemWriter<TItemType>; virtual; abstract;
@@ -277,7 +275,6 @@ type
   public
     constructor Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
     procedure run;
-    property ChunkSize: integer read FChunkSize write SetChunkSize;
   end;
 
 implementation
@@ -454,19 +451,12 @@ end;
 
 { TStepRunner }
 
-procedure TStepRunner<TItemType>.SetChunkSize(AValue: integer);
-begin
-  if FChunkSize = AValue then Exit;
-  FChunkSize := AValue;
-end;
-
 constructor TStepRunner<TItemType>.Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
 begin
   FFileName := aFileName;
   FConnection := aConnection;
   FReaderListener := aReaderListener;
   FWriterListener := aWriterListener;
-  FChunkSize := 1000;
 end;
 
 procedure TStepRunner<TItemType>.run;
@@ -490,19 +480,15 @@ begin
   while not done do
   begin
     index := 0;
-    while index < FChunkSize do
+    if reader.Read(line) then
     begin
-      if reader.Read(line) then
-      begin
-        item := processore.process(line);
-        writer.Write(item);
-        Inc(index);
-      end
-      else
-      begin
-        done := True;
-        break;
-      end;
+      item := processore.process(line);
+      writer.Write(item);
+      Inc(index);
+    end
+    else
+    begin
+      done := True;
     end;
   end;
   reader.Close;
@@ -511,7 +497,7 @@ begin
   FReaderListener := nil;
   FConnection.Commit;
   FConnection := nil;
-  Writeln('Task done in ', millisToString(startTime - millis()));
+  Writeln('******* Task done in ', millisToString(millis() - startTime), ' *******');
 end;
 
 

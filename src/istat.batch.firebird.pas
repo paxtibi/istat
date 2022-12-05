@@ -49,7 +49,6 @@ implementation
 constructor TFirebirdStepRunner<TItemType>.Create(aFileName: TFileName; aConnection: IZConnection; aReaderListener: IItemReaderListener; aWriterListener: IItemWriterListener);
 begin
   inherited Create(aFileName, aConnection, aReaderListener, aWriterListener);
-  FChunkSize := 256 * 10000;
 end;
 
 { TFirebirdChunkedDatabaseWriter }
