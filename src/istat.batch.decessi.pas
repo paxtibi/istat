@@ -157,7 +157,7 @@ begin
       FStatement.SetString(20, Anno_di_matrimonio);
       FStatement.SetString(21, ISO);
       FStatement.SetString(22, Paese_di_cittadinanza);
-      FStatement.SetString(23, CAUSEMORTE_SL);
+      FStatement.SetString(23, StringReplace(CAUSEMORTE_SL, '_', '.', [rfReplaceAll]));
       FStatement.SetString(24, Causa_iniziale_di_morte);
       FStatement.SetString(25, TIME);
       FStatement.SetString(26, Seleziona_periodo);
@@ -191,6 +191,9 @@ begin
     TIPO_DATO15 := Next(Cursor, '|');
     Tipo_dato := Next(Cursor, '|');
     ETA1_A := Next(Cursor, '|');
+    if ETA1_A = 'Y_GE95' then
+      ETA1_A := '95';
+    ETA1_A := StringReplace(ETA1_A, 'Y', '', []);
     Eta := Next(Cursor, '|');
     SEXISTAT1 := Next(Cursor, '|');
     Sesso := Next(Cursor, '|');

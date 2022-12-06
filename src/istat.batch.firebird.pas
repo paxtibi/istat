@@ -172,6 +172,7 @@ begin
   while RS.Next do
   begin
     FConnection.CreateStatement.Execute('ALTER INDEX ' + RS.GetAnsiString(1) + ' ACTIVE');
+    FConnection.CreateStatement.Execute('SET STATISTICS INDEX ' + RS.GetAnsiString(1));
   end;
   FConnection.Commit;
   Result := inherited Close;

@@ -166,6 +166,9 @@ begin
     SEXISTAT1 := Next(Cursor, '|');
     Sesso := Next(Cursor, '|');
     ETA1 := Next(Cursor, '|');
+    if ETA1 = 'Y_GE95' then
+      ETA1 := '95';
+    ETA1 := StringReplace(ETA1, 'Y', '', []);
     Eta := Next(Cursor, '|');
     STATCIV2 := Next(Cursor, '|');
     Stato_civile := Next(Cursor, '|');

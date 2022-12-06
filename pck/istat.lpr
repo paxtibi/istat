@@ -20,8 +20,6 @@ uses
 var
   Application: TIstat;
 
-{$R *.res}
-
 begin
   Application := TIstat.Create(nil);
   Application.Title := 'Istat';

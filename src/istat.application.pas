@@ -23,6 +23,7 @@ type
     function prepareConnection: IZConnection;
     function getConnection: IZConnection;
     function getConnectionDML: IZConnection;
+    procedure CreateIndex(indexName, onTable, columns: string);
     procedure prepareDatabase;
     procedure terminaAttivita;
     procedure DoRun; override;
@@ -44,7 +45,6 @@ type
     function toString: string;
   end;
 
-
 implementation
 
 uses
@@ -55,12 +55,12 @@ uses
 
 procedure TTimerHelper.restart;
 begin
-  self := millis;
+  self := millis();
 end;
 
 function TTimerHelper.elapsed: TTimer;
 begin
-  Result := millis - Self;
+  Result := millis() - Self;
 end;
 
 function TTimerHelper.toString: string;
@@ -112,13 +112,75 @@ begin
   Result.Open;
 end;
 
+procedure TIstat.CreateIndex(indexName, onTable, columns: string);
+var
+  connection: IZConnection;
+  timer: TTimer = 0;
+begin
+  connection := getConnectionDML;
+  try
+    timer.restart;
+    WriteLn('  INDEX ', indexName);
+    connection.CreateStatement.Execute(Format('CREATE INDEX %s ON %s (%s)', [indexName, onTable, columns]));
+    connection.Commit;
+    WriteLn('  INDEX ', indexName, ' in ', timer.toString);
+  except
+    on e: Exception do
+    begin
+      Writeln(e.Message);
+    end;
+  end;
+end;
+
 procedure TIstat.prepareDatabase;
 var
   connection: IZConnection;
 begin
   connection := getConnectionDML;
+  WriteLn('Creazione tabelle');
   try
     connection.CreateStatement.Execute('RECREATE TABLE ISTAT_DECESSI ' + LineEnding + // 0
+      '( ' + LineEnding +// 0
+      'ITTER107 VARCHAR(50), ' + LineEnding + //0
+      'TERRITORIO VARCHAR(50), ' + LineEnding + //0
+      'TIPO_DATO15 VARCHAR(50), ' + LineEnding + //0
+      'TIPO_DATO VARCHAR(50), ' + LineEnding + //0
+      'ETA1_A VARCHAR(50), ' + LineEnding + //0
+      'ETA VARCHAR(50), ' + LineEnding + //0
+      'SEXISTAT1 VARCHAR(50), ' + LineEnding + //0
+      'SESSO VARCHAR(50), ' + LineEnding + //0
+      'STATCIV2 VARCHAR(50), ' + LineEnding + //0
+      'STATO_CIVILE VARCHAR(250), ' + LineEnding + //0
+      'TITOLO_STUDIO VARCHAR(50), ' + LineEnding + //0
+      'ISTRUZIONE VARCHAR(250), ' + LineEnding + //0
+      'T_BIS_A VARCHAR(50), ' + LineEnding + //0
+      'MESE_DI_DECESSO VARCHAR(50), ' + LineEnding + //0
+      'T_BIS_B VARCHAR(50), ' + LineEnding + //0
+      'ANNO_DI_NASCITA VARCHAR(50), ' + LineEnding + //0
+      'ETA1_B VARCHAR(50), ' + LineEnding + //0
+      'CLASSE_DI_ETA_CONIUGE VARCHAR(50), ' + LineEnding + //0
+      'T_BIS_C VARCHAR(50), ' + LineEnding + //0
+      'ANNO_DI_MATRIMONIO VARCHAR(50), ' + LineEnding + //0
+      'ISO VARCHAR(50), ' + LineEnding + //0
+      'PAESE_DI_CITTADINANZA VARCHAR(250), ' + LineEnding + //0
+      'CAUSEMORTE_SL VARCHAR(50), ' + LineEnding + //0
+      'CAUSA_INIZIALE_DI_MORTE VARCHAR(250), ' + LineEnding + //0
+      'ANNO VARCHAR(50), ' + LineEnding + //0
+      'SELEZIONA_PERIODO VARCHAR(50), ' + LineEnding + //0
+      'VALORE VARCHAR(50), ' + LineEnding + //0
+      'FLAG_CODES VARCHAR(50), ' + LineEnding + //0
+      'FLAGS VARCHAR(50)' + LineEnding + //0
+      ')' + LineEnding +// 0
+      '');
+  except
+    on E: Exception do
+    begin
+      WriteLn(e.Message);
+    end;
+  end;
+
+  try
+    connection.CreateStatement.Execute('RECREATE TABLE ISTAT_DECESSI_ITALIA ' + LineEnding + // 0
       '( ' + LineEnding +// 0
       'ITTER107 VARCHAR(50), ' + LineEnding + //0
       'TERRITORIO VARCHAR(50), ' + LineEnding + //0
@@ -217,49 +279,39 @@ end;
 procedure TIstat.terminaAttivita;
 var
   connection: IZConnection;
-  timer: TTimer=0;
+  timer: TTimer = 0;
 begin
   connection := getConnectionDML;
   timer.restart;
-  try
-    connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_1 ON ISTAT_DECESSI (CAUSEMORTE_SL);');
-    connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_2 ON ISTAT_DECESSI (ANNO);');
-    connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_3 ON ISTAT_DECESSI (TITOLO_STUDIO);');
-    connection.CreateStatement.Execute('CREATE INDEX ISTAT_DECESSI_KEY_4 ON ISTAT_DECESSI (ISO);');
-  except
-    on E: Exception do
-    begin
-      WriteLn(e.Message);
-    end;
-  end;
-  try
-    Connection.CreateStatement.Execute('CREATE ASCENDING INDEX ISTAT_POPOLAZIONE_KEY_1 ON ISTAT_POPOLAZIONE (ITTER107)');
-    Connection.CreateStatement.Execute('CREATE ASCENDING INDEX ISTAT_POPOLAZIONE_KEY_2 ON ISTAT_POPOLAZIONE (ETA1)');
-    Connection.CreateStatement.Execute('CREATE ASCENDING INDEX ISTAT_POPOLAZIONE_KEY_3 ON ISTAT_POPOLAZIONE (SEXISTAT1)');
-    Connection.CreateStatement.Execute('CREATE ASCENDING INDEX ISTAT_POPOLAZIONE_KEY_4 ON ISTAT_POPOLAZIONE (ANNO)');
-    Connection.CreateStatement.Execute('CREATE ASCENDING INDEX ISTAT_POPOLAZIONE_KEY_5 ON ISTAT_POPOLAZIONE (STATCIV2)');
-  except
-    on E: Exception do
-    begin
-      WriteLn(e.Message);
-    end;
-  end;
-  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_1');
-  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_2');
-  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_3');
-  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_DECESSI_KEY_4');
-
-  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_1');
-  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_2');
-  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_3');
-  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_4');
-  Connection.CreateStatement.Execute('SET STATISTICS INDEX ISTAT_POPOLAZIONE_KEY_5');
-  Connection.Commit;
-  WriteLn('Creazione indici in ', timer.ToString);
+  WriteLn('Creazione indici');
+  CreateIndex('ISTAT_DECESSI_KEY_01', 'ISTAT_DECESSI', 'ITTER107');
+  CreateIndex('ISTAT_DECESSI_KEY_02', 'ISTAT_DECESSI', 'TIPO_DATO15');
+  CreateIndex('ISTAT_DECESSI_KEY_03', 'ISTAT_DECESSI', 'ETA1_A');
+  CreateIndex('ISTAT_DECESSI_KEY_04', 'ISTAT_DECESSI', 'SEXISTAT1');
+  CreateIndex('ISTAT_DECESSI_KEY_05', 'ISTAT_DECESSI', 'SEXISTAT1');
+  CreateIndex('ISTAT_DECESSI_KEY_06', 'ISTAT_DECESSI', 'TITOLO_STUDIO');
+  CreateIndex('ISTAT_DECESSI_KEY_07', 'ISTAT_DECESSI', 'T_BIS_A');
+  CreateIndex('ISTAT_DECESSI_KEY_08', 'ISTAT_DECESSI', 'T_BIS_B');
+  CreateIndex('ISTAT_DECESSI_KEY_09', 'ISTAT_DECESSI', 'ETA1_B');
+  CreateIndex('ISTAT_DECESSI_KEY_10', 'ISTAT_DECESSI', 'ISO');
+  CreateIndex('ISTAT_DECESSI_KEY_11', 'ISTAT_DECESSI', 'CAUSEMORTE_SL');
+  CreateIndex('ISTAT_DECESSI_KEY_12', 'ISTAT_DECESSI', 'ANNO');
+  CreateIndex('ISTAT_POPOLAZIONE_KEY_01', 'ISTAT_POPOLAZIONE', 'ITTER107');
+  CreateIndex('ISTAT_POPOLAZIONE_KEY_02', 'ISTAT_POPOLAZIONE', 'ETA1');
+  CreateIndex('ISTAT_POPOLAZIONE_KEY_03', 'ISTAT_POPOLAZIONE', 'SEXISTAT1');
+  CreateIndex('ISTAT_POPOLAZIONE_KEY_04', 'ISTAT_POPOLAZIONE', 'ANNO');
+  CreateIndex('ISTAT_POPOLAZIONE_KEY_05', 'ISTAT_POPOLAZIONE', 'STATCIV2');
+  WriteLn('Creazione indici in ', timer.toString);
+  WriteLn('Travaso dati in "ISTAT_POPOLAZIONE_ITALIANA"');
   timer.restart;
   Connection.CreateStatement.Execute('INSERT INTO ISTAT_POPOLAZIONE_ITALIANA SELECT * FROM ISTAT_POPOLAZIONE WHERE ITTER107=''IT'' and SEXISTAT1=9 and STATCIV2=99');
   Connection.Commit;
-  WriteLn('Tabella POPOLAZIONE ITALIANA riversata ', timer.ToString);
+  WriteLn('Tabella "POPOLAZIONE ITALIANA" travasata in ', timer.ToString);
+  WriteLn('Travaso dati in "ISTAT_DECESSI_ITALIANA"');
+  timer.restart;
+  Connection.CreateStatement.Execute('INSERT INTO ISTAT_DECESSI_ITALIANA SELECT * FROM ISTAT_POPOLAZIONE WHERE ITTER107=''IT'' and R.SEXISTAT1 = 9 and R.STATCIV2 = 99 and R.TITOLO_STUDIO = 99 and R.ISO = ''IT''');
+  Connection.Commit;
+  WriteLn('Tabella "ISTAT_DECESSI_ITALIANA ITALIANA" travasata in ', timer.ToString);
 end;
 
 
@@ -292,7 +344,7 @@ begin
   activeTasks.Start;
   while activeTasks.workingCount > 0 do
   begin
-    if millis() - lastMillis > 1000*60 then
+    if millis() - lastMillis > 1000 * 60 then
     begin
       Writeln(Format('Active Threads: %d - Read: %15n -> Write: %15n in %s', [activeTasks.workingCount, FReadListener.Count * 1.0, FWriteListener.Count * 1.0, millisToString(millis() - lastMillis)], DefaultFormatSettings));
       lastMillis := millis();
